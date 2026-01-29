@@ -10,6 +10,9 @@ on:
         description: 'The git tag to create a release for'
         required: true
 
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Publish binaries
@@ -27,41 +30,59 @@ jobs:
         echo "tag=$TAG" >> $GITHUB_OUTPUT
         echo "GIT_TAG_NAME=$TAG" >> $GITHUB_ENV
 
-    - uses: actions/checkout@v2
+    - name: Checkout source at tag
+      uses: actions/checkout@v4
       with:
         ref: ${{ steps.get_tag.outputs.tag }}
+        fetch-depth: 0
 
-    - name: Checkout manifest build scripts repo.
-      uses: actions/checkout@v2
+    - name: Checkout manifest build scripts repo
+      uses: actions/checkout@v4
       with:
         repository: jesseward/jellyfin-utilities
         path: manifest-tools
 
-    - uses: actions/setup-dotnet@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '9.0.x'
 
-    - name: Build release via dotnet build...
+    - name: Build release via dotnet build
       run: dotnet build Jellyfin.Plugin.Lastfm
 
-    - name: Create ZIP archive of plugin release.
-      run: zip "lastfm_${GIT_TAG_NAME}.zip" /home/runner/work/jellyfin-plugin-lastfm/jellyfin-plugin-lastfm/Jellyfin.Plugin.Lastfm/bin/Debug/net9.0/Jellyfin.Plugin.Lastfm.dll
+    - name: Create ZIP archive of plugin release
+      run: |
+        zip "lastfm_${GIT_TAG_NAME}.zip" \
+          "$GITHUB_WORKSPACE/Jellyfin.Plugin.Lastfm/bin/Debug/net9.0/Jellyfin.Plugin.Lastfm.dll"
 
-    - uses: actions/setup-python@v2
+    - name: Setup Python
+      uses: actions/setup-python@v5
       with:
         python-version: '3.13'
 
-    - name: Update manifest with new version.
+    - name: Update manifest with new version
       run: |
         CK=$(python manifest-tools/md5/md5.py -f "lastfm_${GIT_TAG_NAME}.zip")
         python manifest-tools/manifest-generator/manifest.py \
           -app LastFM -f manifest.json \
-          version -ver "${GIT_TAG_NAME}" \
+          version \
+          -ver "${GIT_TAG_NAME}" \
           -cl "Jellyfin LastFM build v${GIT_TAG_NAME}" \
           -abi "10.11.0.0" \
           -url "https://github.com/danielfariati/jellyfin-plugin-lastfm/releases/download/${GIT_TAG_NAME}/lastfm_${GIT_TAG_NAME}.zip" \
           -ck "${CK}"
+        echo "Updated manifest.json:"
         cat manifest.json
+
+    - name: Create GitHub release and upload binaries
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: "lastfm_${{ steps.get_tag.outputs.tag }}.zip"
+        asset_name: "lastfm_${{ steps.get_tag.outputs.tag }}.zip"
+        tag: ${{ steps.get_tag.outputs.tag }}
+        overwrite: true
+        body: "Jellyfin lastfm plugin release v${{ steps.get_tag.outputs.tag }}"
 
     - name: Commit manifest.json to default branch
       env:
@@ -80,5 +101,5 @@ jobs:
           exit 0
         fi
 
-        git commit -m "chore: update manifest.json for ${GIT_TAG_NAME}"
+        git commit -m "chore: update manifest.json for ${{ steps.get_tag.outputs.tag }}"
         git push origin "${DEFAULT_BRANCH}"
