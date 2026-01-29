@@ -1,9 +1,6 @@
 name: Publish
 
 on:
-  push:
-    tags:
-      - '*'
   workflow_dispatch:
     inputs:
       tag:
@@ -15,26 +12,34 @@ permissions:
 
 jobs:
   build:
-    name: Publish binaries
+    name: Build, tag, release, update manifest
     runs-on: ubuntu-latest
 
     steps:
     - name: Get tag name
       id: get_tag
       run: |
-        if [[ "${{ github.event_name }}" == "push" ]]; then
-          TAG=${GITHUB_REF#refs/tags/}
-        else
-          TAG=${{ github.event.inputs.tag }}
-        fi
+        TAG="${{ github.event.inputs.tag }}"
         echo "tag=$TAG" >> $GITHUB_OUTPUT
         echo "GIT_TAG_NAME=$TAG" >> $GITHUB_ENV
 
-    - name: Checkout source at tag
+    - name: Checkout default branch
       uses: actions/checkout@v4
       with:
-        ref: ${{ steps.get_tag.outputs.tag }}
         fetch-depth: 0
+
+    - name: Validate tag does not exist
+      run: |
+        TAG="${{ steps.get_tag.outputs.tag }}"
+
+        git fetch --tags origin
+
+        if git rev-parse "refs/tags/${TAG}" >/dev/null 2>&1; then
+          echo "ERROR: Tag '${TAG}' already exists. Aborting."
+          exit 1
+        fi
+
+        echo "Tag '${TAG}' does not exist. Continuing..."
 
     - name: Checkout manifest build scripts repo
       uses: actions/checkout@v4
@@ -85,21 +90,20 @@ jobs:
         body: "Jellyfin lastfm plugin release v${{ steps.get_tag.outputs.tag }}"
 
     - name: Commit manifest.json to default branch
-      env:
-        DEFAULT_BRANCH: master
       run: |
         git config user.name "github-actions[bot]"
         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-        git fetch origin "${DEFAULT_BRANCH}"
-        git checkout -B "${DEFAULT_BRANCH}" "origin/${DEFAULT_BRANCH}"
-
         git add manifest.json
-
         if git diff --cached --quiet; then
           echo "No changes to commit."
-          exit 0
+        else
+          git commit -m "chore: update manifest.json for ${GIT_TAG_NAME}"
+          git push origin HEAD
         fi
 
-        git commit -m "chore: update manifest.json for ${{ steps.get_tag.outputs.tag }}"
-        git push origin "${DEFAULT_BRANCH}"
+    - name: Create tag
+      run: |
+        TAG="${{ steps.get_tag.outputs.tag }}"
+        git tag -a "${TAG}" -m "Release ${TAG}"
+        git push origin "refs/tags/${TAG}"
