@@ -34,7 +34,7 @@ jobs:
     - name: Checkout manifest build scripts repo.
       uses: actions/checkout@v2
       with:
-        repository: danielfariati/jellyfin-utilities
+        repository: jesseward/jellyfin-utilities
         path: manifest-tools
 
     - uses: actions/setup-dotnet@v4
