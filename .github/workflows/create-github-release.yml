@@ -34,7 +34,7 @@ jobs:
     - name: Checkout manifest build scripts repo.
       uses: actions/checkout@v2
       with:
-        repository: jesseward/jellyfin-utilities
+        repository: danielfariati/jellyfin-utilities
         path: manifest-tools
 
     - uses: actions/setup-dotnet@v4
@@ -51,25 +51,34 @@ jobs:
       with:
         python-version: '3.13'
 
-    - name: Fetch existing manifest from repo.
-      run: curl -o manifest.json "https://jellyfin-repo.jesseward.com/manifest.json"
-
     - name: Update manifest with new version.
-      run: CK=$(python manifest-tools/md5/md5.py -f "lastfm_${GIT_TAG_NAME}.zip") && python manifest-tools/manifest-generator/manifest.py -app LastFM -f manifest.json version -ver "${GIT_TAG_NAME}" -cl "Jellyfin LastFM build v${GIT_TAG_NAME}" -abi "10.11.0.0" -url "https://github.com/jesseward/jellyfin-plugin-lastfm/releases/download/${GIT_TAG_NAME}/lastfm_${GIT_TAG_NAME}.zip" -ck "${CK}" && cat manifest.json
+      run: |
+        CK=$(python manifest-tools/md5/md5.py -f "lastfm_${GIT_TAG_NAME}.zip")
+        python manifest-tools/manifest-generator/manifest.py \
+          -app LastFM -f manifest.json \
+          version -ver "${GIT_TAG_NAME}" \
+          -cl "Jellyfin LastFM build v${GIT_TAG_NAME}" \
+          -abi "10.11.0.0" \
+          -url "https://github.com/danielfariati/jellyfin-plugin-lastfm/releases/download/${GIT_TAG_NAME}/lastfm_${GIT_TAG_NAME}.zip" \
+          -ck "${CK}"
+        cat manifest.json
 
-    - name: Create github release and upload binaries.
-      uses: svenstaro/upload-release-action@v2
-      with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: "lastfm_${{ steps.get_tag.outputs.tag }}.zip"
-        asset_name: "lastfm_${{ steps.get_tag.outputs.tag }}.zip"
-        tag: ${{ steps.get_tag.outputs.tag }}
-        overwrite: true
-        body: "Jellyfin lastfm plugin release v${{ steps.get_tag.outputs.tag }}"
+    - name: Commit manifest.json to default branch
+      env:
+        DEFAULT_BRANCH: master
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-    - name: Upload manifest.json to remote Azure blob store.
-      uses: azure/CLI@v1
-      with:
-        azcliversion: 2.0.72
-        inlineScript: |
-          az storage blob upload -f manifest.json -n manifest.json --container-name "${{ secrets.AZURE_STORAGE_CONTAINER_NAME }}" --connection-string "${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}"
+        git fetch origin "${DEFAULT_BRANCH}"
+        git checkout -B "${DEFAULT_BRANCH}" "origin/${DEFAULT_BRANCH}"
+
+        git add manifest.json
+
+        if git diff --cached --quiet; then
+          echo "No changes to commit."
+          exit 0
+        fi
+
+        git commit -m "chore: update manifest.json for ${GIT_TAG_NAME}"
+        git push origin "${DEFAULT_BRANCH}"
