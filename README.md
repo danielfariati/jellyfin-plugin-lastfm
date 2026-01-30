@@ -70,6 +70,6 @@ While some setups may continue working without a clean install, performing these
 ## 🛠 Troubleshooting
 
 - Missing scrobbles? Try enabling **Alternative Mode**
-- If authentication appears broken, re-enter your Last.fm credentials to generate a new session key
+- If authentication appears broken, re-enter your Last.fm credentials and save to generate a new session key
 - Check Jellyfin server logs for plugin-related messages
 - Issues after migrating from the old plugin? Follow the [clean migration steps above](#-migrating-from-the-archived-jesseward-plugin)
