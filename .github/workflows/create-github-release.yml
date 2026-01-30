@@ -110,9 +110,3 @@ jobs:
           git commit -m "chore: update manifest.json for ${GIT_TAG_NAME}"
           git push origin HEAD
         fi
-
-    - name: Create tag
-      run: |
-        TAG="${{ steps.get_tag.outputs.tag }}"
-        git tag -a "${TAG}" -m "Release ${TAG}"
-        git push origin "refs/tags/${TAG}"
