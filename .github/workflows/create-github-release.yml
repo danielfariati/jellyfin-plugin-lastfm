@@ -79,7 +79,7 @@ jobs:
       run: |
         CK=$(python manifest-tools/md5/md5.py -f "lastfm_${GIT_TAG_NAME}.zip")
         python manifest-tools/manifest-generator/manifest.py \
-          -app LastFM -f manifest.json \
+          -app Last.fm -f manifest.json \
           version \
           -ver "${GIT_TAG_NAME}" \
           -cl "Jellyfin LastFM build v${GIT_TAG_NAME}" \
