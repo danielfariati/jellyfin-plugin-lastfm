@@ -69,7 +69,7 @@ While some setups may continue working without a clean install, performing these
 
 ## 🛠 Troubleshooting
 
-- Missing scrobbles? Try enabling **Alternative Mode**
+- Missing scrobbles? Try enabling **Alternative Mode** (more details in the [Per-user Settings](#-per-user-settings) section)
 - If authentication appears broken, re-enter your Last.fm credentials and save to generate a new session key
 - Check Jellyfin server logs for plugin-related messages
 - Issues after migrating from the old plugin? Follow the [clean migration steps above](#-migrating-from-the-archived-jesseward-plugin)
