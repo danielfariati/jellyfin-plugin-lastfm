@@ -82,7 +82,7 @@ jobs:
           -app Last.fm -f manifest.json \
           version \
           -ver "${GIT_TAG_NAME}" \
-          -cl "Jellyfin LastFM build v${GIT_TAG_NAME}" \
+          -cl "Jellyfin Last.fm build v${GIT_TAG_NAME}" \
           -abi "10.11.0.0" \
           -url "https://github.com/danielfariati/jellyfin-plugin-lastfm/releases/download/${GIT_TAG_NAME}/lastfm_${GIT_TAG_NAME}.zip" \
           -ck "${CK}"

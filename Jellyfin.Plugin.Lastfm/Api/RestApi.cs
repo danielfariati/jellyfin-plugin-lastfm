@@ -22,7 +22,7 @@ namespace Jellyfin.Plugin.Lastfm.Api
         [Consumes("application/json")]
         public object CreateMobileSession([FromBody] LastFMUser lastFMUser)
         {
-            _logger.LogInformation("Fetching LastFM mobilesession auth for Username={0}", lastFMUser.Username);
+            _logger.LogInformation("Fetching Last.fm mobilesession auth for Username={0}", lastFMUser.Username);
             return _apiClient.RequestSession(lastFMUser.Username, lastFMUser.Password).Result;
         }
     }

@@ -19,7 +19,7 @@
     using Microsoft.Extensions.Logging;
 
     /// <summary>
-    /// Task that will sync each users LastFM loved songs with their local library.
+    /// Task that will sync each users Last.fm loved songs with their local library.
     /// </summary>
     public class ImportLastfmData : IScheduledTask
     {
@@ -96,7 +96,7 @@
                 return;
             }
 
-            _logger.LogInformation("Syncing LastFM favourties for {0}", user.Username);
+            _logger.LogInformation("Syncing Last.fm favourties for {0}", user.Username);
 
             List<MusicArtist> artists = _libraryManager.GetArtists(new InternalItemsQuery(user))
                 .Items
@@ -106,7 +106,7 @@
 
             int matchedSongs = 0;
 
-            // Fetch the user's loved tracks from LastFM API.
+            // Fetch the user's loved tracks from Last.fm API.
             List<LastfmLovedTrack> lovedTracks = await GetLovedTracksLibrary(lastFmUser, progress, cancellationToken, maxProgress, progressOffset);
 
             if (lovedTracks.Count == 0)
@@ -150,7 +150,7 @@
                     {
                         if (StringHelper.IsLike(song.Name, artistTrack.Name))
                         {
-                            _logger.LogInformation("Match Found: {Artist}-{Song} <== LastFM :: Library ==> {LovedArtist}-{LovedSong}",
+                            _logger.LogInformation("Match Found: {Artist}-{Song} <== Last.fm :: Library ==> {LovedArtist}-{LovedSong}",
                             artistTrack.Artist.Name, artistTrack.Name,
                             artist.Name, song.Name);
                             matchedSong = artistTrack;
@@ -206,7 +206,7 @@
 
                 progress.Report(currentProgress * 100);
             } while (moreTracks);
-            _logger.LogInformation("Retrieved {0} lovedTracks from LastFM for user {1}", tracks.Count(), lastfmUser.Username);
+            _logger.LogInformation("Retrieved {0} lovedTracks from Last.fm for user {1}", tracks.Count(), lastfmUser.Username);
             return tracks;
         }
     }

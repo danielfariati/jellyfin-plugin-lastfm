@@ -32,7 +32,7 @@
         }
 
         /// <summary>
-        /// Send a POST request to the LastFM Api
+        /// Send a POST request to the Last.fm Api
         /// </summary>
         /// <typeparam name="TRequest">The type of the request</typeparam>
         /// <typeparam name="TResponse">The type of the response</typeparam>
