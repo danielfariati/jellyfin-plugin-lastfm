@@ -12,10 +12,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout default branch
+    - name: Checkout selected branch
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
+        ref: ${{ github.ref_name }}
 
     - name: Get tag name from build.yaml (version)
       id: get_tag
@@ -108,5 +109,5 @@ jobs:
           echo "No changes to commit."
         else
           git commit -m "chore: update manifest.json for ${GIT_TAG_NAME}"
-          git push origin HEAD
+          git push origin "HEAD:${{ github.ref_name }}"
         fi

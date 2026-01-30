@@ -25,7 +25,7 @@
             Instance = this;
         }
 
-        public override Guid Id { get; } = new Guid("de7fe7f0-b048-439e-a431-b1a7e99c930d");
+        public override Guid Id { get; } = new Guid("5e7fe7f0-b048-429e-a431-b1a7e69c930d");
 
         public override string Name
             => "Last.fm";
