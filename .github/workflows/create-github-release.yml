@@ -2,10 +2,6 @@ name: Publish
 
 on:
   workflow_dispatch:
-    inputs:
-      tag:
-        description: 'The git tag to create a release for'
-        required: true
 
 permissions:
   contents: write
@@ -16,17 +12,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Get tag name
-      id: get_tag
-      run: |
-        TAG="${{ github.event.inputs.tag }}"
-        echo "tag=$TAG" >> $GITHUB_OUTPUT
-        echo "GIT_TAG_NAME=$TAG" >> $GITHUB_ENV
-
     - name: Checkout default branch
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
+
+    - name: Get tag name from build.yaml (version)
+      id: get_tag
+      run: |
+        if [ ! -f build.yaml ]; then
+          echo "ERROR: build.yaml not found in repo root"
+          exit 1
+        fi
+
+        TAG=$(grep -E '^\s*version:\s*' build.yaml | head -n1 | sed -E 's/^\s*version:\s*"?([^"]+)"?\s*$/\1/')
+
+        if [ -z "$TAG" ]; then
+          echo "ERROR: Could not read 'version' from build.yaml"
+          exit 1
+        fi
+
+        echo "tag=$TAG" >> $GITHUB_OUTPUT
+        echo "GIT_TAG_NAME=$TAG" >> $GITHUB_ENV
+        echo "Release tag will be: $TAG"
+
 
     - name: Validate tag does not exist
       run: |
