@@ -2,9 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
-    <AssemblyVersion>10.11.0.2</AssemblyVersion>
-    <FileVersion>10.11.0.2</FileVersion>
-    <Version>10.11.0.2</Version>
+    <AssemblyVersion>10.11.0.3</AssemblyVersion>
+    <FileVersion>10.11.0.3</FileVersion>
+    <Version>10.11.0.3</Version>
   </PropertyGroup>
 
   <ItemGroup>
