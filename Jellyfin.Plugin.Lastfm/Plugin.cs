@@ -31,7 +31,7 @@
             => "Last.fm";
 
         public override string Description
-            => "Scrobble your music collection to Last.fm";
+            => "Scrobble your music collection to Last.fm or Libre.fm";
 
         public static Plugin Instance { get; private set; }
 

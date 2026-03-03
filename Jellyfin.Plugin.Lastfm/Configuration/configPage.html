@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>Last.fm Scrobbler Configuration</title>
+    <title>Scrobbler Configuration</title>
 </head>
 
 <body>
@@ -13,8 +13,14 @@
             <div class="content-primary">
                 <form id="LastfmScrobblerConfigurationForm">
                     <div class="selectContainer">
-                        <select is="emby-select" id="user" name="user" label="Configure Last.fm for:"></select>
+                        <select is="emby-select" id="user" name="user" label="Configure User:"></select>
                     </div>
+                    <div class="inputContainer">
+                        <select is="emby-select" id="service" name="service" label="Scrobble to:"></select>
+                    </div>
+					<div class="inputContainer" id="customServerContainer" style="display:none;">
+						<input is="emby-input" id="customServer" name="customServer" type="text" label="Server URL:" />
+					</div>
                     <div class="inputContainer">
                         <input is="emby-input" id="username" name="username" type="text" label="Username:" />
                     </div>
@@ -57,6 +63,7 @@
                 _currentUserConfig: null,
 
                 configDefaults: {
+                    Service: '',
                     Username: '',
                     SessionKey: '',
                     MediaBrowserUserId: '',
@@ -119,6 +126,7 @@
                 populateInputs: function (userData) {
                     var data = $.extend({}, this.configDefaults, userData);
 
+                    this.$el.find('#service').val(data.Username);
                     this.$el.find('#username').val(data.Username);
                     this.$el.find('#password').val(data.SessionKey);
                     this.$el.find('#optionScrobble').prop('checked', data.Options.Scrobble);
@@ -230,7 +238,7 @@
                     var username = $(this).find("#username").val();
                     var password = $(this).find("#password").val();
 
-                    //Load the config again in case another user has updated their Lastfm info
+                    //Load the config again in case another user has updated their info
                     self.loadConfiguration().then(function () {
                         self.save(username, password);
                     });
@@ -241,6 +249,22 @@
             $('#LastfmScrobblerConfigurationPage').on('pageshow', function () {
                 LastfmScrobblerConfigurationPage.init($(this));
             });
+
+			const serviceSelect = document.querySelector('#service');
+
+			// populate options
+			['Last.fm', 'Libre.fm', 'Custom Server'].forEach((name, i) => {
+				const opt = document.createElement('option');
+				opt.value = ['lastfm', 'librefm', 'custom'][i];
+				opt.textContent = name;
+				serviceSelect.appendChild(opt);
+			});
+
+			// toggle custom input
+			serviceSelect.addEventListener('change', function () {
+				const container = document.querySelector('#customServerContainer');
+				container.style.display = this.value === 'custom' ? '' : 'none';
+			});
 
             //Add my own methods to the api client
             ApiClient.LastfmGetMobileSession = function (username, password) {
@@ -262,7 +286,10 @@
                     contentType: "application/json",
                     dataType: 'json'
                 });
-            };</script>
+            };
+
+
+		</script>
     </div>
 </body>
 

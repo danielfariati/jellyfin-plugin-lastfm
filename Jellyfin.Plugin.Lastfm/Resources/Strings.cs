@@ -5,6 +5,7 @@
         public static class Endpoints
         {
             public static string LastfmApi  = "ws.audioscrobbler.com";
+            public static string LibrefmApi  = "libre.fm";
         }
 
         public static class Methods
@@ -23,6 +24,8 @@
         {
             public static string LastfmApiKey     = "cb3bdcd415fcb40cd572b137b2b255f5";
             public static string LastfmApiSeceret = "3a08f9fad6ddc4c35b0dce0062cecb5e";
+            public static string LibrefmApiKey    = "30jelliesinthesunwithbuttertoday";
+            public static string LibrefmApiSeceret= "";
         }
     }
 }
