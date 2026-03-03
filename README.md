@@ -51,7 +51,8 @@ If a user changes their Last.fm password, you may need to reconfigure the plugin
   - You prefer scrobbling to be triggered by the client-reported stop event rather than by Jellyfin saving user playback data;
 
 - **Advanced options**
-  - **API host**
+  - **API host:**
+
     Allows you to specify a custom API host for Last.fm-compatible services / APIs.
     For example:
     - **Last.fm (Default):** `ws.audioscrobbler.com`
