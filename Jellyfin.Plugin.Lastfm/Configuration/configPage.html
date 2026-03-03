@@ -19,7 +19,7 @@
                         <input is="emby-input" id="username" name="username" type="text" label="Username:" />
                     </div>
                     <div class="inputContainer">
-                        <input is="emby-input" id="password" name="password" type="text" label="Password:" />
+                        <input is="emby-input" id="password" name="password" type="password" label="Password:" />
                     </div>
                     <div class="checkboxContainer">
                         <label>
@@ -43,7 +43,10 @@
                         <summary>Advanced options</summary>
                         <div class="inputContainer">
                             <input is="emby-input" id="apiHost" name="apiHost" type="text" label="API host:" />
-                            <div class="fieldDescription">For Last.fm, use: ws.audioscrobbler.com - For Libre.fm, use: libre.fm</div>
+                            <div class="fieldDescription">
+                                <p>For Last.fm, use: ws.audioscrobbler.com - For Libre.fm, use: libre.fm</p>
+                                <p>If you change this setting, you need specify the password again, before saving, or it won't work.</p>
+                            </div>
                         </div>
                     </details>
                     <div>
@@ -139,8 +142,11 @@
 
                 save: function (username, password) {
                     var userConfig = this.getCurrentSelectedUser();
+                    var previousApiHost = this._config.LastfmApiHost || this.configDefaults.LastfmApiHost;
+                    var newApiHost = this.$el.find('#apiHost').val() || this.configDefaults.LastfmApiHost;
+                    var apiHostChanged = (previousApiHost || '').trim().toLowerCase() !== (newApiHost || '').trim().toLowerCase();
 
-                    this._config.LastfmApiHost = this.$el.find('#apiHost').val() || this.configDefaults.LastfmApiHost;
+                    this._config.LastfmApiHost = newApiHost;
 
                     if (!username && !password) {
                         this.doSave();
@@ -161,14 +167,14 @@
 
 
                     //Dont try and login again if the password field is still the SessionKey
-                    if (userConfig.SessionKey == password) {
+                    if (userConfig.SessionKey == password && !apiHostChanged) {
                         this.doSave();
 
                         return;
                     }
 
                     //Get session with user data
-                    ApiClient.LastfmGetMobileSession(username, password).then($.proxy(function (data) {
+                    ApiClient.LastfmGetMobileSession(username, password, this._config.LastfmApiHost).then($.proxy(function (data) {
                         //Check if we have data
                         if (data && data.session) {
 
@@ -259,7 +265,7 @@
             });
 
             //Add my own methods to the api client
-            ApiClient.LastfmGetMobileSession = function (username, password) {
+            ApiClient.LastfmGetMobileSession = function (username, password, apiHost) {
                 if (!username) throw new Error("no username");
 
                 if (!password) throw new Error("no password");
@@ -268,7 +274,8 @@
 
                 var data = {
                     username: username,
-                    password: password
+                    password: password,
+                    apiHost: apiHost
                 };
 
                 return this.ajax({
