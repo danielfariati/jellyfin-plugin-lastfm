@@ -9,7 +9,7 @@
         "versions": [
             {
                 "version": "10.11.0.6",
-                "changelog": "Jellyfin Last.fm build v10.11.0.6",
+                "changelog": "New API key and secret, since the previous one was blocked or deleted by the original project owner. Every user will need to re-enter their credentials for the plugin to work again. There's no way to migrate the old credentials since the API key is different, so the plugin will just stop working until the user updates their credentials. This is a necessary change to keep the plugin working, since the previous API key was blocked or deleted by the original project owner.",
                 "targetAbi": "10.11.0.0",
                 "sourceUrl": "https://github.com/danielfariati/jellyfin-plugin-lastfm/releases/download/10.11.0.6/lastfm_10.11.0.6.zip",
                 "checksum": "846b430a3782e7d3ad50d8a398ece2b9",
