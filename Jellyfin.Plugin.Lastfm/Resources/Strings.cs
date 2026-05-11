@@ -21,8 +21,8 @@
 
         public static class Keys
         {
-            public static string LastfmApiKey     = "cb3bdcd415fcb40cd572b137b2b255f5";
-            public static string LastfmApiSecret = "3a08f9fad6ddc4c35b0dce0062cecb5e";
+            public static string LastfmApiKey = "00d6ea99f92a9c9c9686291eddc9c533";
+            public static string LastfmApiSecret = "da27c3b9f8434c46d125a417af87f10d";
         }
     }
 }
