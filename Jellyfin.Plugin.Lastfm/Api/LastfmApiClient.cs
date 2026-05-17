@@ -86,7 +86,7 @@
                 && response.Message.Contains("missing a required parameter", StringComparison.OrdinalIgnoreCase);
         }
 
-        public async Task Scrobble(Audio item, LastfmUser user)
+        public async Task Scrobble(Audio item, LastfmUser user, DateTime playbackStartTime)
         {
             if (CheckAndUpdateScrobbleCache(user.Username, item.Id.ToString()))
             {
@@ -94,11 +94,13 @@
             }
 
             // API docs -> https://www.last.fm/api/show/track.scrobble
+            // Timestamp must be the time the track started playing (UTC), not the
+            // time the scrobble is submitted.
             var request = new ScrobbleRequest
             {
                 Track = item.Name,
                 Artist = item.Artists.First(),
-                Timestamp = Helpers.CurrentTimestamp(),
+                Timestamp = Helpers.ToTimestamp(playbackStartTime),
 
                 ApiKey = Strings.Keys.LastfmApiKey,
                 Method = Strings.Methods.Scrobble,

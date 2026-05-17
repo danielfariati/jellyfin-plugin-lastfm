@@ -9,6 +9,7 @@
     using System.Net.Http;
     using System.Threading.Tasks;
     using System;
+    using Microsoft.Extensions.Caching.Memory;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Hosting;
     using System.Threading;
@@ -26,8 +27,14 @@
         // if a song reaches >= 50% played, allow scrobble.
         private const double minimumPlayPercentage = 50.00;
 
+        // Cache playback start times so scrobbles can report when the track actually
+        // started playing (as required by the Last.fm API) instead of submission time.
+        // 24h is well beyond any realistic single-track playback while still bounding the cache.
+        private static readonly TimeSpan PlaybackStartTimeTtl = TimeSpan.FromHours(24);
+
         private readonly ISessionManager _sessionManager;
         private readonly IUserDataManager _userDataManager;
+        private readonly MemoryCache _playbackStartTimes = new(new MemoryCacheOptions());
 
         private LastfmApiClient _apiClient;
         private readonly ILogger<ServerEntryPoint> _logger;
@@ -107,7 +114,10 @@
                     _logger.LogInformation("track {0} is missing  artist ({1}) or track name ({2}) metadata. Not submitting", item.Path, item.Artists.FirstOrDefault(), item.Name);
                     return;
                 }
-                await _apiClient.Scrobble(item, lastfmUser).ConfigureAwait(false);
+                // Alt mode has no playback position to fall back on, so use now if we
+                // missed PlaybackStart (e.g. server restarted mid-track).
+                var startedAt = ConsumePlaybackStartTime(e.UserId, item.Id, DateTime.UtcNow);
+                await _apiClient.Scrobble(item, lastfmUser, startedAt).ConfigureAwait(false);
             }
         }
 
@@ -185,7 +195,11 @@
                 _logger.LogInformation("track {0} is missing  artist ({1}) or track name ({2}) metadata. Not submitting", item.Path, item.Artists.FirstOrDefault(), item.Name);
                 return;
             }
-            await _apiClient.Scrobble(item, lastfmUser).ConfigureAwait(false);
+            // Fall back to (now - playback position) if PlaybackStart wasn't captured
+            // (e.g. server restarted mid-track) — strictly better than submission time.
+            var fallbackStart = DateTime.UtcNow - TimeSpan.FromTicks(e.PlaybackPositionTicks ?? 0);
+            var startedAt = ConsumePlaybackStartTime(user.Id, item.Id, fallbackStart);
+            await _apiClient.Scrobble(item, lastfmUser, startedAt).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -202,6 +216,10 @@
             {
                 return;
             }
+
+            // Record start time before any opt-out checks so it's available even if
+            // config changes between PlaybackStart and the eventual scrobble.
+            _playbackStartTimes.Set(BuildPlaybackStartKey(user.Id, e.Item.Id), DateTime.UtcNow, PlaybackStartTimeTtl);
 
             var lastfmUser = Utils.UserHelpers.GetUser(user);
             if (lastfmUser == null)
@@ -256,12 +274,30 @@
 
             // Clean up
             _apiClient = null;
+            _playbackStartTimes.Dispose();
             return Task.CompletedTask;
         }
 
         public void Dispose()
         {
             GC.SuppressFinalize(this);
+        }
+
+        private static string BuildPlaybackStartKey(Guid userId, Guid itemId)
+        {
+            return $"{userId:N}:{itemId:N}";
+        }
+
+        private DateTime ConsumePlaybackStartTime(Guid userId, Guid itemId, DateTime fallback)
+        {
+            var key = BuildPlaybackStartKey(userId, itemId);
+            if (_playbackStartTimes.TryGetValue(key, out DateTime startedAt))
+            {
+                _playbackStartTimes.Remove(key);
+                return startedAt;
+            }
+            _logger.LogDebug("No playback start time cached for user={0} item={1}; falling back to {2:o}", userId, itemId, fallback);
+            return fallback;
         }
     }
 }
