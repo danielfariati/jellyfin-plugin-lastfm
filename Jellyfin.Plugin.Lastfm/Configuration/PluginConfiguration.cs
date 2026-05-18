@@ -11,14 +11,18 @@
     {
         public LastfmUser[] LastfmUsers { get; set; }
         public string LastfmApiHost { get; set; }
+        public string ApiKey { get; set; }
+        public string ApiSecret { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PluginConfiguration" /> class.
         /// </summary>
         public PluginConfiguration()
         {
-            LastfmUsers = new LastfmUser[] { };
+            LastfmUsers = [];
             LastfmApiHost = Strings.Endpoints.LastfmApi;
+            ApiKey = Strings.Keys.LastfmApiKey;
+            ApiSecret = Strings.Keys.LastfmApiSecret;
         }
     }
 }

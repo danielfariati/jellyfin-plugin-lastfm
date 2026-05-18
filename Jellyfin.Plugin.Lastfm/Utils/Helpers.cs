@@ -63,7 +63,10 @@
                 s.Append(String.Format("{0}{1}", item.Key, item.Value));
 
             //Append secret
-            s.Append(Strings.Keys.LastfmApiSecret);
+            var secretKey = string.IsNullOrWhiteSpace(Plugin.Instance?.PluginConfiguration?.ApiSecret)
+             ? Strings.Keys.LastfmApiSecret 
+             : Plugin.Instance.PluginConfiguration.ApiSecret;
+            s.Append(secretKey);
 
             return CreateMd5Hash(s.ToString());
         }

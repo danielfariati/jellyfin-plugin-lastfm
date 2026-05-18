@@ -22,6 +22,11 @@
         private readonly MemoryCache _scrobbleCache = new(new MemoryCacheOptions());
         private readonly object _scrobbleLock = new();
 
+        private static string ConfiguredApiKey =>
+            string.IsNullOrWhiteSpace(Plugin.Instance?.PluginConfiguration?.ApiKey)
+                ? Strings.Keys.LastfmApiKey // fallback to default API key if not set in config
+                : Plugin.Instance.PluginConfiguration.ApiKey; // user-set API key from config
+
         public LastfmApiClient(IHttpClientFactory httpClientFactory, ILogger logger) : base(httpClientFactory, logger)
         {
             _logger = logger;
@@ -37,7 +42,7 @@
                 Username = username,
                 Password = password,
 
-                ApiKey = Strings.Keys.LastfmApiKey,
+                ApiKey = ConfiguredApiKey,
                 Method = Strings.Methods.GetMobileSession,
                 Secure = true
             };
@@ -100,7 +105,7 @@
                 Artist = item.Artists.First(),
                 Timestamp = Helpers.CurrentTimestamp(),
 
-                ApiKey = Strings.Keys.LastfmApiKey,
+                ApiKey = ConfiguredApiKey,
                 Method = Strings.Methods.Scrobble,
                 SessionKey = user.SessionKey,
                 Secure = true
@@ -153,7 +158,7 @@
                 Track = item.Name,
                 Artist = item.Artists.First(),
 
-                ApiKey = Strings.Keys.LastfmApiKey,
+                ApiKey = ConfiguredApiKey,
                 Method = Strings.Methods.NowPlaying,
                 SessionKey = user.SessionKey,
                 Secure = true
@@ -214,7 +219,7 @@
                 Artist = artist,
                 Track = item.Name,
 
-                ApiKey = Strings.Keys.LastfmApiKey,
+                ApiKey = ConfiguredApiKey,
                 Method = love ? Strings.Methods.TrackLove : Strings.Methods.TrackUnlove,
                 SessionKey = user.SessionKey,
                 Secure = true
@@ -257,7 +262,7 @@
             var request = new GetLovedTracksRequest
             {
                 User = user.Username,
-                ApiKey = Strings.Keys.LastfmApiKey,
+                ApiKey = ConfiguredApiKey,
                 Method = Strings.Methods.GetLovedTracks,
                 Limit = 1000, // {"error":6,"message":"limit param out of bounds (1-1000)"}
                 Page = page,
@@ -273,7 +278,7 @@
             {
                 User = user.Username,
                 Artist = artist.Name,
-                ApiKey = Strings.Keys.LastfmApiKey,
+                ApiKey = ConfiguredApiKey,
                 Method = Strings.Methods.GetTracks,
                 Limit = 1000,
                 Secure = true
@@ -287,7 +292,7 @@
             var request = new GetTracksRequest
             {
                 User = user.Username,
-                ApiKey = Strings.Keys.LastfmApiKey,
+                ApiKey = ConfiguredApiKey,
                 Method = Strings.Methods.GetTracks,
                 Limit = limit,
                 Page = page,
