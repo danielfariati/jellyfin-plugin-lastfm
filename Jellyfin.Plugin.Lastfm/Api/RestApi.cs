@@ -25,10 +25,10 @@ namespace Jellyfin.Plugin.Lastfm.Api
         public object CreateMobileSession([FromBody] LastFMUser lastFMUser)
         {
             _logger.LogInformation("Fetching Last.fm mobilesession auth for Username={0}", lastFMUser.Username);
-            return ExecuteWithApiHostOverride(lastFMUser.ApiHost, () => _apiClient.RequestSession(lastFMUser.Username, lastFMUser.Password).Result);
+            return ExecuteWithApiConfigurationOverride(lastFMUser.ApiHost, lastFMUser.ApiKey, lastFMUser.ApiSecret, () => _apiClient.RequestSession(lastFMUser.Username, lastFMUser.Password).Result);
         }
 
-        private static object ExecuteWithApiHostOverride(string apiHost, Func<object> action)
+        private static object ExecuteWithApiConfigurationOverride(string apiHost, string apiKey, string apiSecret, Func<object> action)
         {
             lock (_apiHostLock)
             {
@@ -39,10 +39,22 @@ namespace Jellyfin.Plugin.Lastfm.Api
                 }
 
                 var originalHost = config.LastfmApiHost;
+                var originalApiKey = config.ApiKey;
+                var originalApiSecret = config.ApiSecret;
 
                 if (!string.IsNullOrWhiteSpace(apiHost))
                 {
                     config.LastfmApiHost = apiHost;
+                }
+
+                if (!string.IsNullOrWhiteSpace(apiKey))
+                {
+                    config.ApiKey = apiKey;
+                }
+
+                if (!string.IsNullOrWhiteSpace(apiSecret))
+                {
+                    config.ApiSecret = apiSecret;
                 }
 
                 try
@@ -52,6 +64,8 @@ namespace Jellyfin.Plugin.Lastfm.Api
                 finally
                 {
                     config.LastfmApiHost = originalHost;
+                    config.ApiKey = originalApiKey;
+                    config.ApiSecret = originalApiSecret;
                 }
             }
         }
@@ -62,5 +76,7 @@ namespace Jellyfin.Plugin.Lastfm.Api
         public string Username { get; set; }
         public string Password { get; set; }
         public string ApiHost { get; set; }
+        public string ApiKey { get; set; }
+        public string ApiSecret { get; set; }
     }
 }

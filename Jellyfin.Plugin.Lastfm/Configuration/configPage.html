@@ -48,6 +48,13 @@
                                 <p>If you change this setting, you need specify the password again, before saving, or it won't work.</p>
                             </div>
                         </div>
+                        <!-- custom API keys -->
+                         <div class="inputContainer">
+                            <input is="emby-input" id="apiKey" name="apiKey" type="text" label="API Key:" />
+                        </div>
+                        <div class="inputContainer">
+                            <input is="emby-input" id="apiSecret" name="apiSecret" type="text" label="API Secret:" />
+                        </div>
                     </details>
                     <div>
                         <button is="emby-button" type="submit" class="raised button-submit block emby-button">
@@ -75,7 +82,9 @@
                         Scrobble: false,
                         SyncFavourites: false,
                         AlternativeMode: false
-                    }
+                    },
+                    ApiKey: '',
+                    ApiSecret: ''
                 },
 
                 $el: null,
@@ -131,6 +140,8 @@
                     var data = $.extend({}, this.configDefaults, userData);
 
                     this.$el.find('#apiHost').val(this._config.LastfmApiHost || this.configDefaults.LastfmApiHost);
+                    this.$el.find('#apiKey').val(this._config.ApiKey || this.configDefaults.ApiKey);
+                    this.$el.find('#apiSecret').val(this._config.ApiSecret || this.configDefaults.ApiSecret);
                     this.$el.find('#username').val(data.Username);
                     this.$el.find('#password').val(data.SessionKey);
                     this.$el.find('#optionScrobble').prop('checked', data.Options.Scrobble);
@@ -145,8 +156,12 @@
                     var previousApiHost = this._config.LastfmApiHost || this.configDefaults.LastfmApiHost;
                     var newApiHost = this.$el.find('#apiHost').val() || this.configDefaults.LastfmApiHost;
                     var apiHostChanged = (previousApiHost || '').trim().toLowerCase() !== (newApiHost || '').trim().toLowerCase();
+                    var apiKey = this.$el.find('#apiKey').val() || this.configDefaults.ApiKey;
+                    var apiSecret = this.$el.find('#apiSecret').val() || this.configDefaults.ApiSecret;
 
                     this._config.LastfmApiHost = newApiHost;
+                    this._config.ApiKey = apiKey;
+                    this._config.ApiSecret = apiSecret;
 
                     if (!username && !password) {
                         this.doSave();
@@ -174,7 +189,7 @@
                     }
 
                     //Get session with user data
-                    ApiClient.LastfmGetMobileSession(username, password, this._config.LastfmApiHost).then($.proxy(function (data) {
+                    ApiClient.LastfmGetMobileSession(username, password, this._config.LastfmApiHost, this._config.ApiKey, this._config.ApiSecret).then($.proxy(function (data) {
                         //Check if we have data
                         if (data && data.session) {
 
@@ -265,7 +280,7 @@
             });
 
             //Add my own methods to the api client
-            ApiClient.LastfmGetMobileSession = function (username, password, apiHost) {
+            ApiClient.LastfmGetMobileSession = function (username, password, apiHost, apiKey, apiSecret) {
                 if (!username) throw new Error("no username");
 
                 if (!password) throw new Error("no password");
@@ -275,7 +290,9 @@
                 var data = {
                     username: username,
                     password: password,
-                    apiHost: apiHost
+                    apiHost: apiHost,
+                    apiKey: apiKey,
+                    apiSecret: apiSecret
                 };
 
                 return this.ajax({
