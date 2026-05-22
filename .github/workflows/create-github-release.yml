@@ -63,12 +63,12 @@ jobs:
         dotnet-version: '9.0.x'
 
     - name: Build release via dotnet build
-      run: dotnet build Jellyfin.Plugin.Lastfm
+      run: dotnet build Jellyfin.Plugin.Lastfm -c Release -o ./build
 
     - name: Create ZIP archive of plugin release
       run: |
-        zip "lastfm_${GIT_TAG_NAME}.zip" \
-          "$GITHUB_WORKSPACE/Jellyfin.Plugin.Lastfm/bin/Debug/net9.0/Jellyfin.Plugin.Lastfm.dll"
+        zip -j "lastfm_${GIT_TAG_NAME}.zip" \
+          "$GITHUB_WORKSPACE/build/Jellyfin.Plugin.Lastfm.dll"
 
     - name: Setup Python
       uses: actions/setup-python@v5
