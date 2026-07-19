@@ -8,6 +8,14 @@
         "category": "music",
         "versions": [
             {
+                "version": "10.11.0.7",
+                "changelog": "Jellyfin Last.fm build v10.11.0.7",
+                "targetAbi": "10.11.9.0",
+                "sourceUrl": "https://github.com/danielfariati/jellyfin-plugin-lastfm/releases/download/10.11.0.7/lastfm_10.11.0.7.zip",
+                "checksum": "d2089bdcf5d3202d1597138e24aa0350",
+                "timestamp": "2026-07-19T04:04:44Z"
+            },
+            {
                 "version": "10.11.0.6",
                 "changelog": "New API key and secret, since the previous one was blocked or deleted by the original project owner. After upgrading, every user will need to re-enter their credentials for the plugin to work again. There's no way to migrate the old credentials since the API key is different and we don't store the actual user password (we just use it to create a session key). This is a necessary change to keep the plugin working, since the stored session keys were generated with the previous API key that is not valid anymore.",
                 "targetAbi": "10.11.0.0",
