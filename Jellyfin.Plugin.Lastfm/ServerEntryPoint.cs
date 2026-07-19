@@ -142,9 +142,12 @@
 
             var item = e.Item as Audio;
 
+            // Logged before any other check, same as the UserDataSaved handler, so that "the event never arrived" can be told apart from "it arrived but was discarded".
+            _logger.LogInformation("PlaybackStopped: track={Track}, positionTicks={PositionTicks}, runtimeTicks={RuntimeTicks}", item.Name, e.PlaybackPositionTicks, item.RunTimeTicks);
+
             if (e.PlaybackPositionTicks == null)
             {
-                _logger.LogDebug("Playback ticks for {0} is null", item.Name);
+                _logger.LogInformation("Playback ticks for {0} is null, won't scrobble", item.Name);
                 return;
             }
 

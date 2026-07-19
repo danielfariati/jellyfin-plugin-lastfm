@@ -12,7 +12,8 @@ owner: "danielfariati"
 artifacts:
   - "Jellyfin.Plugin.Lastfm.dll"
 changelog: >
-  Playback events received from Jellyfin are now logged, to help debug reports of tracks
-  that never get scrobbled in alternative mode. Some clients do not tell the server that a
-  track finished, and until now there was no way to tell that apart from the plugin
-  discarding the event. This only adds logging, scrobbling behaviour is unchanged.
+  Playback events received from Jellyfin are now logged, in both the default and the
+  alternative mode, to help debug reports of tracks that never get scrobbled. Some clients
+  do not tell the server that a track was played or stopped, and until now there was no way
+  to tell that apart from the plugin discarding the event. The reason a track was skipped
+  is logged as well. This only adds logging, scrobbling behaviour is unchanged.

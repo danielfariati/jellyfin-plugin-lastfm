@@ -8,6 +8,16 @@ The plugin was originally migrated from the Emby repository and adapted to funct
 
 ## 🔧 Installation and Configuration
 
+### Requirements
+
+The plugin requires **Jellyfin 10.11 or newer**. On older servers it will not show up in the plugin catalog at all - the repository will look empty, because no version of the plugin is compatible with them.
+
+The latest updates additionally require **Jellyfin 10.11.9 or newer**. If your server is older than that, the catalog will keep offering you the last version that is compatible with it, instead of the newest one.
+
+Neither case means the repository is broken. Update Jellyfin to receive newer plugin versions.
+
+### Installing
+
 Install the plugin via the Jellyfin plugin repository. Navigate to the **Plugins** section of the admin dashboard and add the following repository to receive stable builds of this plugin:
 
 - **Repo name:** Last.fm Stable  
@@ -40,7 +50,7 @@ If a user changes their Last.fm password, you may need to reconfigure the plugin
 
   By default, the plugin scrobbles tracks when Jellyfin emits the `PlaybackStopped` event. This event is reported by the client, and its timing and accuracy depend on the client implementation. Some clients may emit this event with delayed or synthetic timing, or may not emit it consistently (particularly mobile clients), which can lead to missing or inconsistent scrobbles.
   
-  When **Alternative Mode** is enabled, the plugin scrobbles tracks on `UserDataSaved` events instead. These events are triggered when Jellyfin persists playback progress or marks an item as played, making scrobbling dependent on server-side playback state rather than client-reported stop events.
+  When **Alternative Mode** is enabled, the plugin scrobbles tracks on `UserDataSaved` events instead - specifically when Jellyfin **marks the track as played**. This makes scrobbling depend on server-side playback state rather than on the client-reported stop event.
 
   **Enable Alternative Mode if:**
   - You experience missing or inconsistent scrobbles;
@@ -49,6 +59,8 @@ If a user changes their Last.fm password, you may need to reconfigure the plugin
   **Disable it if:**
   - Your clients reliably report `PlaybackStopped` events;
   - You prefer scrobbling to be triggered by the client-reported stop event rather than by Jellyfin saving user playback data;
+
+  ⚠️ **Alternative Mode is not a fix for every client.** It still depends on the client reporting playback well enough for Jellyfin to mark the track as played. If a client never gets that far, neither mode will scrobble, and the track will only ever show as "Scrobbling now" on Last.fm without ever landing in your history. In that case the problem is in the client itself and has to be reported to that client's developers.
 
 - **Advanced options**
   - **API host:**
@@ -81,8 +93,30 @@ While some setups may continue working without a clean install, performing these
 
 ## 🛠 Troubleshooting
 
-- Missing scrobbles? Try enabling **Alternative Mode** (more details in the [Per-user Settings](#-per-user-settings) section)
+- Missing scrobbles? Try enabling **Alternative Mode**, keeping its limitations in mind (more details in the [Per-user Settings](#-per-user-settings) section)
 - If authentication appears broken, re-enter your Last.fm credentials and save to generate a new session key
 - If using a custom API host (for example Libre.fm), confirm the host is correct and then re-authenticate to refresh the session key for that host
-- Check Jellyfin server logs for plugin-related messages
+- Check the Jellyfin server logs - the plugin logs why a track was or wasn't scrobbled (see [Reporting an issue](#reporting-an-issue))
+- Not being offered the latest plugin version? Check the [Requirements](#requirements) section - newer versions need a newer Jellyfin server
 - Issues after migrating from the old plugin? Follow the [clean migration steps above](#-migrating-from-the-archived-jesseward-plugin)
+
+### Reporting an issue
+
+**Please update to the [latest release](https://github.com/danielfariati/jellyfin-plugin-lastfm/releases/latest) and confirm the problem still happens there before opening an issue.** It may already be fixed, and older versions logged far less information, which makes them much harder to debug.
+
+The plugin logs what it is doing, which usually explains a missing scrobble on its own. When opening an issue, please include these lines from the Jellyfin server log:
+
+| Log line | What it tells us |
+|---|---|
+| `Last.fm plugin v...` | Which plugin version is actually loaded. Only printed on server startup, so restart Jellyfin if you cannot find it |
+| `UserDataSaved: ...` | Which playback events Jellyfin received, and their reason. Only relevant to **Alternative Mode**, which scrobbles when a `PlaybackFinished` event arrives - if that one never shows up for a track, the client is not reporting playback well enough for Jellyfin to mark it as played |
+| `PlaybackStopped: ...` | The stop event arrived, with how much of the track was played. Only relevant to the **default mode**. If it never appears for a track, the client is not reporting stops |
+| `... won't scrobble` | The track was deliberately skipped, and why - usually too short, or not played far enough |
+| `... Not submitting` | The track was skipped because it is missing artist or track name metadata |
+| `No session key present, aborting` | That user is not authenticated with Last.fm. Re-enter the credentials and save |
+| `Submitting scrobble: ...` | A scrobble was sent, including the timestamp used |
+| `Scrobble succeeded: ...` | Last.fm accepted the scrobble |
+| `Scrobble ignored by Last.fm: ...` | Last.fm received the scrobble but discarded it, including the reason why |
+| `Scrobble failed ...` / `Scrobble exception: ...` | The request itself failed, including the error returned |
+
+Please also include your Jellyfin version, plugin version, and which client you were playing from, since a lot of scrobbling problems turn out to be client-specific.
