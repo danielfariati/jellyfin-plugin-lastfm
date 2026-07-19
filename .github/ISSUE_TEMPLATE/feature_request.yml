@@ -1,0 +1,41 @@
+name: Feature request
+description: Suggest an improvement to the Last.fm plugin
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please keep in mind that this plugin only handles the connection between Jellyfin and
+        Last.fm. Anything about how playback itself is reported usually belongs to Jellyfin or
+        to the client app you are playing from, and is better raised with them.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: >
+        Describe the problem or the use case rather than the solution. It often turns out there
+        is already a way to do it, or a simpler option than the one you had in mind.
+      placeholder: >
+        Example: I share my server with family, and I would like each of them to be able to see
+        whether their own scrobbling is working without asking me to check the server logs.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like the plugin to do?
+      description: How you imagine it working, if you already have something in mind.
+    validations:
+      required: false
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: >
+        Alternatives you considered, how other plugins or scrobblers handle it, links to the
+        relevant Last.fm API documentation, or anything else that might help.
+    validations:
+      required: false
