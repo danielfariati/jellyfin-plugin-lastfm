@@ -56,7 +56,7 @@
         public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
         {
             //Get all users
-            var users = _userManager.Users.Where(u =>
+            var users = _userManager.GetUsers().Where(u =>
             {
                 var user = UserHelpers.GetUser(u);
                 return user != null && !String.IsNullOrWhiteSpace(user.SessionKey);
