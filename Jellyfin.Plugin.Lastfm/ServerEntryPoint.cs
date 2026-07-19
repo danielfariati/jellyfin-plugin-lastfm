@@ -255,6 +255,9 @@
         /// </summary>
         public Task StartAsync(CancellationToken cancellationToken)
         {
+            //Logged on every startup so bug reports can be tied to a specific plugin build
+            _logger.LogInformation("Last.fm plugin v{Version} started", Plugin.Instance?.Version);
+
             //Bind events
             _sessionManager.PlaybackStart += PlaybackStart;
             _sessionManager.PlaybackStopped += PlaybackStopped;
