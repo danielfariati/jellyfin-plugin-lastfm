@@ -8,6 +8,14 @@
         "category": "music",
         "versions": [
             {
+                "version": "10.11.0.9",
+                "changelog": "Playback events received from Jellyfin are now logged, in both the default and the alternative mode, to help debug reports of tracks that never get scrobbled. Some clients do not tell the server that a track was played or stopped, and until now there was no way to tell that apart from the plugin discarding the event. The reason a track was skipped is logged as well. This only adds logging, scrobbling behaviour is unchanged.",
+                "targetAbi": "10.11.9.0",
+                "sourceUrl": "https://github.com/danielfariati/jellyfin-plugin-lastfm/releases/download/10.11.0.9/lastfm_10.11.0.9.zip",
+                "checksum": "eef26e585b356f603d8fb40067532e29",
+                "timestamp": "2026-07-19T05:27:44Z"
+            },
+            {
                 "version": "10.11.0.8",
                 "changelog": "Scrobbles that Last.fm silently drops are now logged as warnings with the reason, instead of being reported as successful. Last.fm answers those with a normal HTTP 200 and no error code, so they were previously indistinguishable from accepted scrobbles in the logs. This does not change which scrobbles are accepted, it only makes the rejected ones visible.",
                 "targetAbi": "10.11.9.0",
