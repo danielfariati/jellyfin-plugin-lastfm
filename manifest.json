@@ -9,7 +9,7 @@
         "versions": [
             {
                 "version": "10.11.0.7",
-                "changelog": "Jellyfin Last.fm build v10.11.0.7",
+                "changelog": "This version requires Jellyfin 10.11.9 or newer. Jellyfin 10.11.9 changed an internal API the plugin relies on. Fixes the 'Import Last.fm Loved Tracks' task. Also refactored the settings page to use plugin-specific element IDs, avoiding clashes with other plugins' configuration pages - this might fix the user dropdown showing up empty for some users.",
                 "targetAbi": "10.11.9.0",
                 "sourceUrl": "https://github.com/danielfariati/jellyfin-plugin-lastfm/releases/download/10.11.0.7/lastfm_10.11.0.7.zip",
                 "checksum": "d2089bdcf5d3202d1597138e24aa0350",
