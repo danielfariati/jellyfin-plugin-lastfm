@@ -8,6 +8,14 @@
         "category": "music",
         "versions": [
             {
+                "version": "10.11.0.10",
+                "changelog": "Scrobble log messages now include the exact data sent to Last.fm, url encoded and without the credentials, so a rejected scrobble can be replayed as is. This also covers the album artist and the MusicBrainz id, which were never logged before, and makes characters that are invisible in a log, such as non breaking spaces in artist names, easy to spot. This only changes logging, scrobbling behaviour is unchanged.",
+                "targetAbi": "10.11.9.0",
+                "sourceUrl": "https://github.com/danielfariati/jellyfin-plugin-lastfm/releases/download/10.11.0.10/lastfm_10.11.0.10.zip",
+                "checksum": "0ef019a15fe62b4270c79f5f8b920a87",
+                "timestamp": "2026-07-19T18:06:25Z"
+            },
+            {
                 "version": "10.11.0.9",
                 "changelog": "Playback events received from Jellyfin are now logged, in both the default and the alternative mode, to help debug reports of tracks that never get scrobbled. Some clients do not tell the server that a track was played or stopped, and until now there was no way to tell that apart from the plugin discarding the event. The reason a track was skipped is logged as well. This only adds logging, scrobbling behaviour is unchanged.",
                 "targetAbi": "10.11.9.0",
