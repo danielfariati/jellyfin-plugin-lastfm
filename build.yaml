@@ -1,7 +1,7 @@
 ---
 name: "Last.fm"
 guid: "5e7fe7f0-b048-429e-a431-b1a7e69c930d"
-version: "10.11.0.8"
+version: "10.11.0.9"
 targetAbi: "10.11.9.0"
 framework: "net9.0"
 overview: "A plugin that scrobbles your Jellyfin music to Last.fm"
@@ -12,8 +12,7 @@ owner: "danielfariati"
 artifacts:
   - "Jellyfin.Plugin.Lastfm.dll"
 changelog: >
-  Scrobbles that Last.fm silently drops are now logged as warnings with the reason,
-  instead of being reported as successful. Last.fm answers those with a normal HTTP 200
-  and no error code, so they were previously indistinguishable from accepted scrobbles
-  in the logs. This does not change which scrobbles are accepted, it only makes the
-  rejected ones visible.
+  Playback events received from Jellyfin are now logged, to help debug reports of tracks
+  that never get scrobbled in alternative mode. Some clients do not tell the server that a
+  track finished, and until now there was no way to tell that apart from the plugin
+  discarding the event. This only adds logging, scrobbling behaviour is unchanged.

@@ -68,6 +68,14 @@
             if (e.Item is not Audio)
                 return;
 
+            // Logged before any other check so "the event never fired" can be told apart from "it fired but was discarded"
+            // Every early return below is debug level, so both cases otherwise look identical in a default log.
+            // PlaybackProgress is skipped because it repeats throughout the whole track.
+            if (e.SaveReason != UserDataSaveReason.PlaybackProgress)
+            {
+                _logger.LogInformation("UserDataSaved: track={Track}, reason={Reason}", e.Item.Name, e.SaveReason);
+            }
+
             var lastfmUser = Utils.UserHelpers.GetUser(e.UserId);
             if (lastfmUser == null)
             {
