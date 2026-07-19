@@ -8,6 +8,14 @@
         "category": "music",
         "versions": [
             {
+                "version": "10.11.0.8",
+                "changelog": "Scrobbles that Last.fm silently drops are now logged as warnings with the reason, instead of being reported as successful. Last.fm answers those with a normal HTTP 200 and no error code, so they were previously indistinguishable from accepted scrobbles in the logs. This does not change which scrobbles are accepted, it only makes the rejected ones visible.",
+                "targetAbi": "10.11.9.0",
+                "sourceUrl": "https://github.com/danielfariati/jellyfin-plugin-lastfm/releases/download/10.11.0.8/lastfm_10.11.0.8.zip",
+                "checksum": "a396a3def6ba2f8f09cfc05d781c3066",
+                "timestamp": "2026-07-19T04:49:09Z"
+            },
+            {
                 "version": "10.11.0.7",
                 "changelog": "This version requires Jellyfin 10.11.9 or newer. Jellyfin 10.11.9 changed an internal API the plugin relies on. Fixes the 'Import Last.fm Loved Tracks' task. Also refactored the settings page to use plugin-specific element IDs, avoiding clashes with other plugins' configuration pages - this might fix the user dropdown showing up empty for some users.",
                 "targetAbi": "10.11.9.0",
