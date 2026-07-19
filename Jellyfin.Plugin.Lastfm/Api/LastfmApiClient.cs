@@ -128,11 +128,6 @@
 
                 // Send the request
                 var response = await Post<ScrobbleRequest, ScrobbleResponse>(request);
-                if (response != null && !response.IsError())
-                {
-                    _logger.LogInformation("Scrobble succeeded: user={User}, artist={Artist}, track={Track}, album={Album}", user.Username, request.Artist, request.Track, request.Album);
-                    return;
-                }
 
                 if (response == null)
                 {
@@ -140,7 +135,24 @@
                     return;
                 }
 
-                _logger.LogError("Scrobble failed: user={User}, artist={Artist}, track={Track}, album={Album}, errorCode={ErrorCode}, message={Message}", user.Username, request.Artist, request.Track, request.Album, response.ErrorCode, response.Message);
+                if (response.IsError())
+                {
+                    _logger.LogError("Scrobble failed: user={User}, artist={Artist}, track={Track}, album={Album}, errorCode={ErrorCode}, message={Message}", user.Username, request.Artist, request.Track, request.Album, response.ErrorCode, response.Message);
+                    return;
+                }
+
+                // Last.fm reports a silently dropped scrobble with HTTP 200 and no error code.
+                // The body carries accepted=0/ignored=1 plus a reason instead.
+                // Without this check an ignored scrobble is indistinguishable from an accepted one in the logs.
+                var attributes = response.Scrobbles?.Attributes;
+                if (attributes != null && attributes.Ignored > 0)
+                {
+                    var ignoredMessage = response.Scrobbles.Scrobble?.IgnoredMessage;
+                    _logger.LogWarning("Scrobble ignored by Last.fm: user={User}, artist={Artist}, track={Track}, album={Album}, timestamp={Timestamp}, code={Code}, reason={Reason}", user.Username, request.Artist, request.Track, request.Album, request.Timestamp, ignoredMessage?.Code, DescribeIgnoredScrobble(ignoredMessage));
+                    return;
+                }
+
+                _logger.LogInformation("Scrobble succeeded: user={User}, artist={Artist}, track={Track}, album={Album}", user.Username, request.Artist, request.Track, request.Album);
             }
             catch (Exception ex)
             {
@@ -298,6 +310,29 @@
             };
 
             return await Get<GetTracksRequest, GetTracksResponse>(request, cancellationToken);
+        }
+
+        /// <summary>
+        /// Last.fm leaves the ignoredMessage text empty in some responses, so fall back to
+        /// the documented meaning of the code.
+        /// </summary>
+        private static string DescribeIgnoredScrobble(IgnoredMessage ignoredMessage)
+        {
+            if (!string.IsNullOrWhiteSpace(ignoredMessage?.Text))
+            {
+                return ignoredMessage.Text;
+            }
+
+            // https://www.last.fm/api/show/track.scrobble
+            return ignoredMessage?.Code switch
+            {
+                1 => "Artist was ignored",
+                2 => "Track was ignored",
+                3 => "Timestamp was too old",
+                4 => "Timestamp was too new",
+                5 => "Daily scrobble limit exceeded",
+                _ => "Unknown reason"
+            };
         }
 
         /// <summary>

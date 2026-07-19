@@ -1,7 +1,7 @@
 ---
 name: "Last.fm"
 guid: "5e7fe7f0-b048-429e-a431-b1a7e69c930d"
-version: "10.11.0.7"
+version: "10.11.0.8"
 targetAbi: "10.11.9.0"
 framework: "net9.0"
 overview: "A plugin that scrobbles your Jellyfin music to Last.fm"
@@ -12,6 +12,8 @@ owner: "danielfariati"
 artifacts:
   - "Jellyfin.Plugin.Lastfm.dll"
 changelog: >
-  Fixes "Method not found: IUserManager.get_Users()" when importing loved tracks.
-  Jellyfin 10.11.9 replaced the IUserManager.Users property with a GetUsers() method,
-  so this release requires Jellyfin 10.11.9 or newer.
+  Scrobbles that Last.fm silently drops are now logged as warnings with the reason,
+  instead of being reported as successful. Last.fm answers those with a normal HTTP 200
+  and no error code, so they were previously indistinguishable from accepted scrobbles
+  in the logs. This does not change which scrobbles are accepted, it only makes the
+  rejected ones visible.
