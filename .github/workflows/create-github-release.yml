@@ -77,17 +77,38 @@ jobs:
 
     - name: Update manifest with new version
       run: |
+        pip install pyyaml
+
+        CL=$(python -c "import yaml;print(yaml.safe_load(open('build.yaml'))['changelog'].strip())")
+        ABI=$(python -c "import yaml;print(yaml.safe_load(open('build.yaml'))['targetAbi'])")
+
+        if [ -z "$CL" ]; then
+          echo "ERROR: Could not read 'changelog' from build.yaml"
+          exit 1
+        fi
+
+        if [ -z "$ABI" ]; then
+          echo "ERROR: Could not read 'targetAbi' from build.yaml"
+          exit 1
+        fi
+
         CK=$(python manifest-tools/md5/md5.py -f "lastfm_${GIT_TAG_NAME}.zip")
         python manifest-tools/manifest-generator/manifest.py \
           -app Last.fm -f manifest.json \
           version \
           -ver "${GIT_TAG_NAME}" \
-          -cl "Jellyfin Last.fm build v${GIT_TAG_NAME}" \
-          -abi "10.11.9.0" \
+          -cl "${CL}" \
+          -abi "${ABI}" \
           -url "https://github.com/danielfariati/jellyfin-plugin-lastfm/releases/download/${GIT_TAG_NAME}/lastfm_${GIT_TAG_NAME}.zip" \
           -ck "${CK}"
         echo "Updated manifest.json:"
         cat manifest.json
+
+        {
+          echo "PLUGIN_CHANGELOG<<CHANGELOG_EOF"
+          echo "${CL}"
+          echo "CHANGELOG_EOF"
+        } >> "$GITHUB_ENV"
 
     - name: Create GitHub release and upload binaries
       uses: svenstaro/upload-release-action@v2
@@ -97,7 +118,10 @@ jobs:
         asset_name: "lastfm_${{ steps.get_tag.outputs.tag }}.zip"
         tag: ${{ steps.get_tag.outputs.tag }}
         overwrite: true
-        body: "Jellyfin lastfm plugin release v${{ steps.get_tag.outputs.tag }}"
+        body: |
+          Jellyfin lastfm plugin release v${{ steps.get_tag.outputs.tag }}
+
+          ${{ env.PLUGIN_CHANGELOG }}
 
     - name: Commit manifest.json to default branch
       run: |
