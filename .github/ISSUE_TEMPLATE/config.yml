@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Troubleshooting guide
+    url: https://github.com/danielfariati/jellyfin-plugin-lastfm#-troubleshooting
+    about: Missing scrobbles, empty user dropdown, authentication problems and plugin updates not showing up.
+  - name: Migrating from the archived jesseward plugin
+    url: https://github.com/danielfariati/jellyfin-plugin-lastfm#-migrating-from-the-archived-jesseward-plugin
+    about: Read this first if you just moved over from the old plugin.

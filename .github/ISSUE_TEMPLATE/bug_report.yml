@@ -1,0 +1,109 @@
+name: Bug report
+description: Report something not working in the Last.fm plugin
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this!
+
+        Most scrobbling problems are explained by the plugin's own log messages, so the log
+        section below is the most important part of this form. See
+        [Reporting an issue](https://github.com/danielfariati/jellyfin-plugin-lastfm#reporting-an-issue)
+        for which lines to look for.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Before reporting
+      options:
+        - label: I am on the [latest release](https://github.com/danielfariati/jellyfin-plugin-lastfm/releases/latest) of the plugin, and the problem still happens there
+          required: true
+        - label: I restarted the Jellyfin server after installing or updating the plugin
+          required: true
+
+  - type: input
+    id: plugin-version
+    attributes:
+      label: Plugin version
+      description: >
+        Please take this from the `Last.fm plugin v...` line in the server log rather than from
+        the plugin catalog, so we know which version is actually loaded. Restart Jellyfin if the
+        line is not in your log.
+      placeholder: "10.11.0.9"
+    validations:
+      required: true
+
+  - type: input
+    id: jellyfin-version
+    attributes:
+      label: Jellyfin server version
+      placeholder: "10.11.11"
+    validations:
+      required: true
+
+  - type: input
+    id: client
+    attributes:
+      label: Client(s) used when the problem happens
+      description: >
+        Which app you were playing from, including the version if you know it. A lot of
+        scrobbling problems turn out to be specific to one client.
+      placeholder: "Jellyfin Web, Findroid 0.16.1, Symfonium, Tauon..."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Scrobble mode
+      description: The "Use alternative mode" checkbox in the plugin settings for that user.
+      options:
+        - Default (scrobbles on PlaybackStopped)
+        - Alternative mode (scrobbles on UserDataSaved)
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you expected, and what happened instead.
+      placeholder: >
+        Example: I played an album from start to finish, the tracks showed up as "Scrobbling now"
+        on Last.fm, but none of them appear in my listening history.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Server logs
+      description: >
+        Log lines from around the time the problem happened. Please make sure they are from this
+        plugin - other plugins log about playback too, and their messages do not tell us anything
+        about this one. Everything from this plugin is logged under `Jellyfin.Plugin.Lastfm`.
+
+
+        Include the `Last.fm plugin v...` startup line, plus any `UserDataSaved:`,
+        `PlaybackStopped:`, `Submitting scrobble:`, `Scrobble succeeded:`,
+        `Scrobble ignored by Last.fm:`, `Scrobble failed`, `won't scrobble` or `Not submitting`
+        lines.
+
+
+        If you see no plugin lines at all for a track that did not scrobble, please say so -
+        that is useful information too, not a reason to skip this field.
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: >
+        Other plugins installed, reverse proxy, unusual setup, when the problem started, or
+        anything else you think might be relevant.
+    validations:
+      required: false
