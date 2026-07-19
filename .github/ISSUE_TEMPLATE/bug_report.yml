@@ -7,10 +7,7 @@ body:
       value: |
         Thanks for taking the time to report this!
 
-        Most scrobbling problems are explained by the plugin's own log messages, so the log
-        section below is the most important part of this form. See
-        [Reporting an issue](https://github.com/danielfariati/jellyfin-plugin-lastfm#reporting-an-issue)
-        for which lines to look for.
+        Most scrobbling problems are explained by the plugin's own log messages, so the log section below is the most important part of this form. See [Reporting an issue](https://github.com/danielfariati/jellyfin-plugin-lastfm#reporting-an-issue) for which lines to look for.
 
   - type: checkboxes
     id: preflight

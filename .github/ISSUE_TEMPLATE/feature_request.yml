@@ -5,9 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Please keep in mind that this plugin only handles the connection between Jellyfin and
-        Last.fm. Anything about how playback itself is reported usually belongs to Jellyfin or
-        to the client app you are playing from, and is better raised with them.
+        Please keep in mind that this plugin only handles the connection between Jellyfin and Last.fm. Anything about how playback itself is reported usually belongs to Jellyfin or to the client app you are playing from, and is better raised with them.
 
   - type: textarea
     id: problem
