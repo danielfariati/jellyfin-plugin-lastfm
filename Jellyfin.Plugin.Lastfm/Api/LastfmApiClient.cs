@@ -124,20 +124,20 @@
 
             try
             {
-                _logger.LogInformation("Submitting scrobble: user={User}, artist={Artist}, track={Track}, album={Album}, timestamp={Timestamp}", user.Username, request.Artist, request.Track, request.Album, request.Timestamp);
+                _logger.LogInformation("Submitting scrobble: user={User}, payload={Payload}", user.Username, DescribeRequest(request));
 
                 // Send the request
                 var response = await Post<ScrobbleRequest, ScrobbleResponse>(request);
 
                 if (response == null)
                 {
-                    _logger.LogError("Scrobble failed with null response: user={User}, artist={Artist}, track={Track}, album={Album}", user.Username, request.Artist, request.Track, request.Album);
+                    _logger.LogError("Scrobble failed with null response: user={User}, payload={Payload}", user.Username, DescribeRequest(request));
                     return;
                 }
 
                 if (response.IsError())
                 {
-                    _logger.LogError("Scrobble failed: user={User}, artist={Artist}, track={Track}, album={Album}, errorCode={ErrorCode}, message={Message}", user.Username, request.Artist, request.Track, request.Album, response.ErrorCode, response.Message);
+                    _logger.LogError("Scrobble failed: user={User}, errorCode={ErrorCode}, message={Message}, payload={Payload}", user.Username, response.ErrorCode, response.Message, DescribeRequest(request));
                     return;
                 }
 
@@ -148,7 +148,7 @@
                 if (attributes != null && attributes.Ignored > 0)
                 {
                     var ignoredMessage = response.Scrobbles.Scrobble?.IgnoredMessage;
-                    _logger.LogWarning("Scrobble ignored by Last.fm: user={User}, artist={Artist}, track={Track}, album={Album}, timestamp={Timestamp}, code={Code}, reason={Reason}", user.Username, request.Artist, request.Track, request.Album, request.Timestamp, ignoredMessage?.Code, DescribeIgnoredScrobble(ignoredMessage));
+                    _logger.LogWarning("Scrobble ignored by Last.fm: user={User}, code={Code}, reason={Reason}, payload={Payload}", user.Username, ignoredMessage?.Code, DescribeIgnoredScrobble(ignoredMessage), DescribeRequest(request));
                     return;
                 }
 
@@ -156,7 +156,7 @@
             }
             catch (Exception ex)
             {
-                _logger.LogError("Scrobble exception: ex={0}, user={1}, name={2}, track={3}, artist={4}, album={5}, albumArtist={6}, mbid={7}", ex, user.Username, item.Name, request.Track, request.Artist, request.Album, request.AlbumArtist, request.MbId);
+                _logger.LogError(ex, "Scrobble exception: user={User}, payload={Payload}", user.Username, DescribeRequest(request));
             }
         }
 
@@ -310,6 +310,23 @@
             };
 
             return await Get<GetTracksRequest, GetTracksResponse>(request, cancellationToken);
+        }
+
+        /// <summary>
+        /// Renders the request exactly as it is sent to Last.fm, url encoded, with the
+        /// credentials removed. The encoding matters: characters that are invisible in a log,
+        /// like non breaking spaces or zero width joiners, show up as escape sequences, and
+        /// the result can be replayed against the API as is.
+        /// </summary>
+        private static string DescribeRequest(BaseRequest request)
+        {
+            var parts = request.ToDictionary()
+                .Where(kvp => !string.IsNullOrWhiteSpace(kvp.Value))
+                .Where(kvp => kvp.Key != "api_key" && kvp.Key != "sk" && kvp.Key != "api_sig")
+                .OrderBy(kvp => kvp.Key)
+                .Select(kvp => string.Format("{0}={1}", kvp.Key, Uri.EscapeDataString(kvp.Value)));
+
+            return string.Join("&", parts);
         }
 
         /// <summary>
