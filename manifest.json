@@ -6,6 +6,7 @@
         "overview": "A plugin that scrobbles your Jellyfin music to Last.fm",
         "owner": "danielfariati",
         "category": "music",
+        "imageUrl": "https://www.last.fm/static/images/lastfm_logo_facebook.png",
         "versions": [
             {
                 "version": "10.11.0.10",
