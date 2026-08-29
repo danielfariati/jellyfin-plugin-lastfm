@@ -1,6 +1,7 @@
 ﻿namespace Jellyfin.Plugin.Lastfm
 {
     using Api;
+    using MediaBrowser.Controller.Entities;
     using MediaBrowser.Controller.Entities.Audio;
     using MediaBrowser.Controller.Library;
     using MediaBrowser.Controller.Session;
@@ -64,8 +65,8 @@
         /// </summary>
         async void UserDataSaved(object sender, UserDataSaveEventArgs e)
         {
-            // We only care about audio
-            if (e.Item is not Audio)
+            // We only care about music, not audiobooks.
+            if (e.Item is not Audio || e.Item is AudioBook)
                 return;
 
             // Logged before any other check so "the event never fired" can be told apart from "it fired but was discarded"
@@ -136,8 +137,8 @@
         /// </summary>
         private async void PlaybackStopped(object sender, PlaybackStopEventArgs e)
         {
-            // We only care about audio
-            if (e.Item is not Audio)
+            // We only care about music, not audiobooks.
+            if (e.Item is not Audio || e.Item is AudioBook)
                 return;
 
             var item = e.Item as Audio;
@@ -218,8 +219,8 @@
         /// </summary>
         private async void PlaybackStart(object sender, PlaybackProgressEventArgs e)
         {
-            // We only care about audio
-            if (e.Item is not Audio)
+            // We only care about music, not audiobooks.
+            if (e.Item is not Audio || e.Item is AudioBook)
                 return;
 
             var user = e.Users.FirstOrDefault();
