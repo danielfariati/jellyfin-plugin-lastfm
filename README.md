@@ -1,6 +1,6 @@
 ## jellyfin-plugin-lastfm
 
-Enables audio scrobbling to Last.fm as well as a metadata fetcher source.
+Enables music scrobbling to Last.fm as well as a metadata fetcher source.
 
 This repository continues the work of the original Jellyfin Last.fm plugin maintained by [jesseward](https://github.com/jesseward/jellyfin-plugin-lastfm), which has since been archived.
 
