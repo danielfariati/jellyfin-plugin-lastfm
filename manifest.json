@@ -9,6 +9,14 @@
         "imageUrl": "https://www.last.fm/static/images/lastfm_logo_facebook.png",
         "versions": [
             {
+                "version": "10.11.0.11",
+                "changelog": "Fixed audiobooks being incorrectly treated as music and sent to Last.fm as now playing tracks, scrobbles, or favourite updates.",
+                "targetAbi": "10.11.9.0",
+                "sourceUrl": "https://github.com/danielfariati/jellyfin-plugin-lastfm/releases/download/10.11.0.11/lastfm_10.11.0.11.zip",
+                "checksum": "bb03afbafe50b7ba78e64e488c855eca",
+                "timestamp": "2026-08-29T02:55:37Z"
+            },
+            {
                 "version": "10.11.0.10",
                 "changelog": "Scrobble log messages now include the exact data sent to Last.fm, url encoded and without the credentials, so a rejected scrobble can be replayed as is. This also covers the album artist and the MusicBrainz id, which were never logged before, and makes characters that are invisible in a log, such as non breaking spaces in artist names, easy to spot. This only changes logging, scrobbling behaviour is unchanged.",
                 "targetAbi": "10.11.9.0",
