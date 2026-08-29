@@ -12,7 +12,7 @@ The plugin was originally migrated from the Emby repository and adapted to funct
 
 The current plugin release supports **Jellyfin 10.11.9 or newer**.
 
-Older Jellyfin versions may still work with an earlier compatible plugin release, but those combinations are not actively supported. The plugin catalog automatically offers the newest release compatible with your server, so an older server may show an older plugin version (or no compatible version at all). This does not mean the repository is broken; update Jellyfin to receive the latest plugin release.
+Older Jellyfin versions may still work with an earlier compatible plugin release, but only the latest plugin release is actively supported. Before reporting a bug, update Jellyfin if necessary and confirm that the issue still occurs with the latest plugin release.
 
 ### Installing
 
