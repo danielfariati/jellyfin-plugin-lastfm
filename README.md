@@ -10,11 +10,9 @@ The plugin was originally migrated from the Emby repository and adapted to funct
 
 ### Requirements
 
-The plugin requires **Jellyfin 10.11 or newer**. On older servers it will not show up in the plugin catalog at all - the repository will look empty, because no version of the plugin is compatible with them.
+The current plugin release supports **Jellyfin 10.11.9 or newer**.
 
-The latest updates additionally require **Jellyfin 10.11.9 or newer**. If your server is older than that, the catalog will keep offering you the last version that is compatible with it, instead of the newest one.
-
-Neither case means the repository is broken. Update Jellyfin to receive newer plugin versions.
+Older Jellyfin versions may still work with an earlier compatible plugin release, but those combinations are not actively supported. The plugin catalog automatically offers the newest release compatible with your server, so an older server may show an older plugin version—or no compatible version at all. This does not mean the repository is broken; update Jellyfin to receive the latest plugin release.
 
 ### Installing
 
