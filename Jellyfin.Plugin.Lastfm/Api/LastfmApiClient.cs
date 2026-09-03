@@ -93,13 +93,20 @@
                 return;
             }
 
+            var artist = item.Artists.FirstOrDefault();
+            if (string.IsNullOrWhiteSpace(artist))
+            {
+                _logger.LogWarning("Skipping scrobble for '{0}': no artist tagged", item.Name);
+                return;
+            }
+
             // API docs -> https://www.last.fm/api/show/track.scrobble
             // Timestamp must be the time the track started playing (UTC), not the
             // time the scrobble is submitted.
             var request = new ScrobbleRequest
             {
                 Track = item.Name,
-                Artist = item.Artists.First(),
+                Artist = artist,
                 Timestamp = Helpers.ToTimestamp(playbackStartTime),
 
                 ApiKey = Strings.Keys.LastfmApiKey,
@@ -116,7 +123,7 @@
             {
                 request.MbId = item.ProviderIds["MusicBrainzTrack"];
             }
-            var albumArtist = item.AlbumArtists.First();
+            var albumArtist = item.AlbumArtists.FirstOrDefault();
             if (!string.IsNullOrWhiteSpace(albumArtist) && albumArtist != request.Artist)
             {
                 request.AlbumArtist = albumArtist;
@@ -126,7 +133,6 @@
             {
                 _logger.LogInformation("Submitting scrobble: user={User}, payload={Payload}", user.Username, DescribeRequest(request));
 
-                // Send the request
                 var response = await Post<ScrobbleRequest, ScrobbleResponse>(request);
 
                 if (response == null)
@@ -162,17 +168,23 @@
 
         public async Task NowPlaying(Audio item, LastfmUser user)
         {
+            var artist = item.Artists.FirstOrDefault();
+            if (string.IsNullOrWhiteSpace(artist))
+            {
+                _logger.LogWarning("Skipping now playing update for '{0}': no artist tagged", item.Name);
+                return;
+            }
+
             var request = new NowPlayingRequest
             {
                 Track = item.Name,
-                Artist = item.Artists.First(),
+                Artist = artist,
 
                 ApiKey = Strings.Keys.LastfmApiKey,
                 Method = Strings.Methods.NowPlaying,
                 SessionKey = user.SessionKey,
                 Secure = true
             };
-
 
             if (!string.IsNullOrWhiteSpace(item.Album))
             {
@@ -182,7 +194,7 @@
             {
                 request.MbId = item.ProviderIds["MusicBrainzTrack"];
             }
-            var albumArtist = item.AlbumArtists.First();
+            var albumArtist = item.AlbumArtists.FirstOrDefault();
             if (!string.IsNullOrWhiteSpace(albumArtist) && albumArtist != request.Artist)
             {
                 request.AlbumArtist = albumArtist;
