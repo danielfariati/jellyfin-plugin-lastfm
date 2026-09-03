@@ -9,6 +9,14 @@
         "imageUrl": "https://www.last.fm/static/images/lastfm_logo_facebook.png",
         "versions": [
             {
+                "version": "10.11.0.12",
+                "changelog": "Fix for tracks without album artist metadata.",
+                "targetAbi": "10.11.9.0",
+                "sourceUrl": "https://github.com/danielfariati/jellyfin-plugin-lastfm/releases/download/10.11.0.12/lastfm_10.11.0.12.zip",
+                "checksum": "7def5e48ad860045116cfbb5c2d11276",
+                "timestamp": "2026-09-03T03:06:45Z"
+            },
+            {
                 "version": "10.11.0.11",
                 "changelog": "Fixed audiobooks being incorrectly treated as music and sent to Last.fm as now playing tracks, scrobbles, or favourite updates.",
                 "targetAbi": "10.11.9.0",
