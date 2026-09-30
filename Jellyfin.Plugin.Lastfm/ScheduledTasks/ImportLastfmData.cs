@@ -137,10 +137,10 @@
                 if (!lovedTracksGroupedByArtist.ContainsKey(artistMBid))
                     continue;
 
-                // Loop through each song
                 foreach (Audio song in artist.GetTaggedItems(new InternalItemsQuery(user)
                 {
                     IncludeItemTypes = new[] { BaseItemKind.Audio },
+                    ArtistIds = new[] { artist.Id },
                     EnableTotalRecordCount = false
                 }).OfType<Audio>().ToList())
                 {
