@@ -9,6 +9,14 @@
         "imageUrl": "https://www.last.fm/static/images/lastfm_logo_facebook.png",
         "versions": [
             {
+                "version": "10.11.0.13",
+                "changelog": "Consider artist id when syncing favourites",
+                "targetAbi": "10.11.9.0",
+                "sourceUrl": "https://github.com/danielfariati/jellyfin-plugin-lastfm/releases/download/10.11.0.13/lastfm_10.11.0.13.zip",
+                "checksum": "5809c1962041da88fc860282fce974cb",
+                "timestamp": "2026-09-30T15:28:51Z"
+            },
+            {
                 "version": "10.11.0.12",
                 "changelog": "Fix for tracks without album artist metadata.",
                 "targetAbi": "10.11.9.0",
