@@ -18,7 +18,8 @@
     {
         private readonly ILogger _logger;
 
-        private static readonly TimeSpan DuplicateScrobbleTTL = TimeSpan.FromSeconds(15);
+        // Retain play-through identities as long as ServerEntryPoint retains their start times.
+        private static readonly TimeSpan DuplicateScrobbleTTL = TimeSpan.FromHours(24);
         private readonly MemoryCache _scrobbleCache = new(new MemoryCacheOptions());
         private readonly object _scrobbleLock = new();
 
@@ -88,17 +89,16 @@
 
         public async Task Scrobble(Audio item, LastfmUser user, DateTime playbackStartTime)
         {
-            if (CheckAndUpdateScrobbleCache(user.Username, item.Id.ToString()))
-            {
-                return;
-            }
-
             var artist = item.Artists.FirstOrDefault();
             if (string.IsNullOrWhiteSpace(artist))
             {
                 _logger.LogWarning("Skipping scrobble for '{0}': no artist tagged", item.Name);
                 return;
             }
+
+            var cacheKey = $"{user.Username}:{item.Id}:{playbackStartTime.Ticks}";
+            if (CheckAndUpdateScrobbleCache(cacheKey))
+                return;
 
             // API docs -> https://www.last.fm/api/show/track.scrobble
             // Timestamp must be the time the track started playing (UTC), not the
@@ -129,6 +129,7 @@
                 request.AlbumArtist = albumArtist;
             }
 
+            var accepted = false;
             try
             {
                 _logger.LogInformation("Submitting scrobble: user={User}, payload={Payload}", user.Username, DescribeRequest(request));
@@ -159,10 +160,16 @@
                 }
 
                 _logger.LogInformation("Scrobble succeeded: user={User}, artist={Artist}, track={Track}, album={Album}", user.Username, request.Artist, request.Track, request.Album);
+                accepted = true;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Scrobble exception: user={User}, payload={Payload}", user.Username, DescribeRequest(request));
+            }
+            finally
+            {
+                if (!accepted)
+                    _scrobbleCache.Remove(cacheKey);
             }
         }
 
@@ -370,14 +377,13 @@
         /// The method also updates the cache with the new scrobble if it's not a duplicate.
         /// Returns true if duplicate, false otherwise.
         /// </summary>
-        private bool CheckAndUpdateScrobbleCache(string username, string trackId)
+        private bool CheckAndUpdateScrobbleCache(string cacheKey)
         {
-            var cacheKey = $"{username}:{trackId}";
             lock (_scrobbleLock)
             {
                 if (_scrobbleCache.TryGetValue(cacheKey, out _))
                 {
-                    _logger.LogInformation("Duplicate scrobble detected for user={0}, trackId={1} within {2} seconds. Skipping.", username, trackId, DuplicateScrobbleTTL.TotalSeconds);
+                    _logger.LogInformation("Playback already submitted or in flight: {PlaybackKey}. Skipping duplicate stop.", cacheKey);
                     return true;
                 }
                 _scrobbleCache.Set(cacheKey, true, DuplicateScrobbleTTL);

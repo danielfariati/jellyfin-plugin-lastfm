@@ -30,7 +30,7 @@
 
         // Cache playback start times so scrobbles can report when the track actually
         // started playing (as required by the Last.fm API) instead of submission time.
-        // 24h is well beyond any realistic single-track playback while still bounding the cache.
+        // shortcut: playback identity expires after 24h, persist it if longer pauses must survive.
         private static readonly TimeSpan PlaybackStartTimeTtl = TimeSpan.FromHours(24);
 
         private readonly ISessionManager _sessionManager;
@@ -125,7 +125,7 @@
                 }
                 // Alt mode has no playback position to fall back on, so use now if we
                 // missed PlaybackStart (e.g. server restarted mid-track).
-                var startedAt = ConsumePlaybackStartTime(e.UserId, item.Id, DateTime.UtcNow);
+                var startedAt = GetPlaybackStartTime(e.UserId, item.Id, DateTime.UtcNow);
                 await _apiClient.Scrobble(item, lastfmUser, startedAt).ConfigureAwait(false);
             }
         }
@@ -210,7 +210,7 @@
             // Fall back to (now - playback position) if PlaybackStart wasn't captured
             // (e.g. server restarted mid-track) — strictly better than submission time.
             var fallbackStart = DateTime.UtcNow - TimeSpan.FromTicks(e.PlaybackPositionTicks ?? 0);
-            var startedAt = ConsumePlaybackStartTime(user.Id, item.Id, fallbackStart);
+            var startedAt = GetPlaybackStartTime(user.Id, item.Id, fallbackStart, e.Session?.Id ?? e.DeviceId);
             await _apiClient.Scrobble(item, lastfmUser, startedAt).ConfigureAwait(false);
         }
 
@@ -231,7 +231,12 @@
 
             // Record start time before any opt-out checks so it's available even if
             // config changes between PlaybackStart and the eventual scrobble.
-            _playbackStartTimes.Set(BuildPlaybackStartKey(user.Id, e.Item.Id), DateTime.UtcNow, PlaybackStartTimeTtl);
+            var startedAt = DateTime.UtcNow;
+            lock (_playbackStartTimes)
+            {
+                _playbackStartTimes.Set(BuildPlaybackStartKey(user.Id, e.Item.Id), startedAt, PlaybackStartTimeTtl);
+                _playbackStartTimes.Set(BuildPlaybackStartKey(user.Id, e.Item.Id, e.Session?.Id ?? e.DeviceId), startedAt, PlaybackStartTimeTtl);
+            }
 
             var lastfmUser = Utils.UserHelpers.GetUser(user);
             if (lastfmUser == null)
@@ -269,6 +274,7 @@
         {
             //Logged on every startup so bug reports can be tied to a specific plugin build
             _logger.LogInformation("Last.fm plugin v{Version} started", Plugin.Instance?.Version);
+            _logger.LogInformation("Last.fm play-through duplicate protection enabled");
 
             //Bind events
             _sessionManager.PlaybackStart += PlaybackStart;
@@ -298,21 +304,23 @@
             GC.SuppressFinalize(this);
         }
 
-        private static string BuildPlaybackStartKey(Guid userId, Guid itemId)
+        private static string BuildPlaybackStartKey(Guid userId, Guid itemId, string sessionId = null)
         {
-            return $"{userId:N}:{itemId:N}";
+            return $"{userId:N}:{itemId:N}:{sessionId}";
         }
 
-        private DateTime ConsumePlaybackStartTime(Guid userId, Guid itemId, DateTime fallback)
+        private DateTime GetPlaybackStartTime(Guid userId, Guid itemId, DateTime fallback, string sessionId = null)
         {
-            var key = BuildPlaybackStartKey(userId, itemId);
-            if (_playbackStartTimes.TryGetValue(key, out DateTime startedAt))
+            var key = BuildPlaybackStartKey(userId, itemId, sessionId);
+            // Progress after a threshold stop can lead to an idle stop for the same play-through.
+            lock (_playbackStartTimes)
             {
-                _playbackStartTimes.Remove(key);
-                return startedAt;
+                if (_playbackStartTimes.TryGetValue(key, out DateTime startedAt))
+                    return startedAt;
+                _logger.LogDebug("No playback start time cached for user={0} item={1}; falling back to {2:o}", userId, itemId, fallback);
+                _playbackStartTimes.Set(key, fallback, PlaybackStartTimeTtl);
+                return fallback;
             }
-            _logger.LogDebug("No playback start time cached for user={0} item={1}; falling back to {2:o}", userId, itemId, fallback);
-            return fallback;
         }
     }
 }
