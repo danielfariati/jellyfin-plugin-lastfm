@@ -30,12 +30,13 @@
 
         // Cache playback start times so scrobbles can report when the track actually
         // started playing (as required by the Last.fm API) instead of submission time.
-        // shortcut: playback identity expires after 24h, persist it if longer pauses must survive.
+        // Retaining the identity also lets repeated stop events resolve to the same scrobble.
         private static readonly TimeSpan PlaybackStartTimeTtl = TimeSpan.FromHours(24);
 
         private readonly ISessionManager _sessionManager;
         private readonly IUserDataManager _userDataManager;
         private readonly MemoryCache _playbackStartTimes = new(new MemoryCacheOptions());
+        private readonly object _playbackStartTimesLock = new();
 
         private LastfmApiClient _apiClient;
         private readonly ILogger<ServerEntryPoint> _logger;
@@ -210,7 +211,7 @@
             // Fall back to (now - playback position) if PlaybackStart wasn't captured
             // (e.g. server restarted mid-track) — strictly better than submission time.
             var fallbackStart = DateTime.UtcNow - TimeSpan.FromTicks(e.PlaybackPositionTicks ?? 0);
-            var startedAt = GetPlaybackStartTime(user.Id, item.Id, fallbackStart, e.Session?.Id ?? e.DeviceId);
+            var startedAt = GetPlaybackStartTime(user.Id, item.Id, fallbackStart, GetPlaybackIdentity(e));
             await _apiClient.Scrobble(item, lastfmUser, startedAt).ConfigureAwait(false);
         }
 
@@ -232,11 +233,12 @@
             // Record start time before any opt-out checks so it's available even if
             // config changes between PlaybackStart and the eventual scrobble.
             var startedAt = DateTime.UtcNow;
-            lock (_playbackStartTimes)
-            {
-                _playbackStartTimes.Set(BuildPlaybackStartKey(user.Id, e.Item.Id), startedAt, PlaybackStartTimeTtl);
-                _playbackStartTimes.Set(BuildPlaybackStartKey(user.Id, e.Item.Id, e.Session?.Id ?? e.DeviceId), startedAt, PlaybackStartTimeTtl);
-            }
+            RecordPlaybackStartTime(
+                user.Id,
+                e.Item.Id,
+                startedAt,
+                GetPlaybackIdentity(e),
+                !string.IsNullOrWhiteSpace(e.PlaySessionId));
 
             var lastfmUser = Utils.UserHelpers.GetUser(user);
             if (lastfmUser == null)
@@ -274,7 +276,6 @@
         {
             //Logged on every startup so bug reports can be tied to a specific plugin build
             _logger.LogInformation("Last.fm plugin v{Version} started", Plugin.Instance?.Version);
-            _logger.LogInformation("Last.fm play-through duplicate protection enabled");
 
             //Bind events
             _sessionManager.PlaybackStart += PlaybackStart;
@@ -304,16 +305,57 @@
             GC.SuppressFinalize(this);
         }
 
-        private static string BuildPlaybackStartKey(Guid userId, Guid itemId, string sessionId = null)
+        private static string BuildPlaybackStartKey(Guid userId, Guid itemId, string playbackIdentity = null)
         {
-            return $"{userId:N}:{itemId:N}:{sessionId}";
+            return $"{userId:N}:{itemId:N}:{playbackIdentity}";
         }
 
-        private DateTime GetPlaybackStartTime(Guid userId, Guid itemId, DateTime fallback, string sessionId = null)
+        private static string GetPlaybackIdentity(PlaybackProgressEventArgs e)
         {
-            var key = BuildPlaybackStartKey(userId, itemId, sessionId);
+            if (!string.IsNullOrWhiteSpace(e.PlaySessionId))
+            {
+                return $"play:{e.PlaySessionId}";
+            }
+
+            if (!string.IsNullOrWhiteSpace(e.Session?.Id))
+            {
+                return $"session:{e.Session.Id}";
+            }
+
+            return string.IsNullOrWhiteSpace(e.DeviceId) ? null : $"device:{e.DeviceId}";
+        }
+
+        private void RecordPlaybackStartTime(
+            Guid userId,
+            Guid itemId,
+            DateTime startedAt,
+            string playbackIdentity,
+            bool preserveExistingIdentity)
+        {
+            lock (_playbackStartTimesLock)
+            {
+                if (!string.IsNullOrWhiteSpace(playbackIdentity))
+                {
+                    var identityKey = BuildPlaybackStartKey(userId, itemId, playbackIdentity);
+                    if (preserveExistingIdentity && _playbackStartTimes.TryGetValue(identityKey, out DateTime _))
+                    {
+                        return;
+                    }
+
+                    _playbackStartTimes.Set(identityKey, startedAt, PlaybackStartTimeTtl);
+                }
+
+                // Alternative mode has no session information on UserDataSaved, so it uses
+                // the most recently started playback for this user and item.
+                _playbackStartTimes.Set(BuildPlaybackStartKey(userId, itemId), startedAt, PlaybackStartTimeTtl);
+            }
+        }
+
+        private DateTime GetPlaybackStartTime(Guid userId, Guid itemId, DateTime fallback, string playbackIdentity = null)
+        {
+            var key = BuildPlaybackStartKey(userId, itemId, playbackIdentity);
             // Progress after a threshold stop can lead to an idle stop for the same play-through.
-            lock (_playbackStartTimes)
+            lock (_playbackStartTimesLock)
             {
                 if (_playbackStartTimes.TryGetValue(key, out DateTime startedAt))
                     return startedAt;

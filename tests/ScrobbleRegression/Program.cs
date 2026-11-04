@@ -32,12 +32,12 @@ void Check(bool condition, string name)
 void Invoke(ServerEntryPoint entry, string method, object args) =>
     typeof(ServerEntryPoint).GetMethod(method, BindingFlags.Instance | BindingFlags.NonPublic)
         .Invoke(entry, new object[] { null, args });
-void Start(ServerEntryPoint entry, Audio track, string device = "device-a") => Invoke(entry,
+void Start(ServerEntryPoint entry, Audio track, string device = "device-a", string playSessionId = null) => Invoke(entry,
     "PlaybackStart", new PlaybackStartEventArgs { Item = track, Users = new List<User> { user }, DeviceId = device,
-        Session = new SessionInfo(null, NullLogger.Instance) { Id = device } });
-void Stop(ServerEntryPoint entry, Audio track, long ticks, string device = "device-a") => Invoke(entry,
+        PlaySessionId = playSessionId, Session = new SessionInfo(null, NullLogger.Instance) { Id = device } });
+void Stop(ServerEntryPoint entry, Audio track, long ticks, string device = "device-a", string playSessionId = null) => Invoke(entry,
     "PlaybackStopped", new PlaybackStopEventArgs { Item = track, Users = new List<User> { user },
-        PlaybackPositionTicks = ticks, DeviceId = device,
+        PlaybackPositionTicks = ticks, DeviceId = device, PlaySessionId = playSessionId,
         Session = new SessionInfo(null, NullLogger.Instance) { Id = device } });
 
 var http = new FakeHttp();
@@ -105,6 +105,36 @@ http.Gate.SetResult();
 await inFlight;
 http.Gate = null;
 
+var repeatBoundary = Track();
+var repeatBoundaryBefore = http.Scrobbles;
+Start(entry, repeatBoundary, playSessionId: "repeat-1");
+Stop(entry, repeatBoundary, repeatBoundary.RunTimeTicks.Value, playSessionId: "repeat-1");
+Start(entry, repeatBoundary, playSessionId: "repeat-2");
+Stop(entry, repeatBoundary, repeatBoundary.RunTimeTicks.Value, playSessionId: "repeat-1");
+Check(http.Scrobbles == repeatBoundaryBefore + 1,
+    "late stop from the previous play does not claim the next repeat");
+Stop(entry, repeatBoundary, repeatBoundary.RunTimeTicks.Value, playSessionId: "repeat-2");
+Check(http.Scrobbles == repeatBoundaryBefore + 2,
+    "next repeat scrobbles when its own play session becomes eligible");
+
+var missingStartRepeat = Track();
+var missingStartRepeatBefore = http.Scrobbles;
+Stop(entry, missingStartRepeat, missingStartRepeat.RunTimeTicks.Value, playSessionId: "missing-start-1");
+Stop(entry, missingStartRepeat, missingStartRepeat.RunTimeTicks.Value, playSessionId: "missing-start-1");
+Stop(entry, missingStartRepeat, missingStartRepeat.RunTimeTicks.Value, playSessionId: "missing-start-2");
+Check(http.Scrobbles == missingStartRepeatBefore + 2,
+    "a new play session scrobbles even when its playback start was missed");
+
+var repeatedStart = Track();
+var repeatedStartBefore = http.Scrobbles;
+Start(entry, repeatedStart, playSessionId: "repeated-start");
+Stop(entry, repeatedStart, repeatedStart.RunTimeTicks.Value, playSessionId: "repeated-start");
+clock.UtcNow += TimeSpan.FromMinutes(10);
+Start(entry, repeatedStart, playSessionId: "repeated-start");
+Stop(entry, repeatedStart, repeatedStart.RunTimeTicks.Value, playSessionId: "repeated-start");
+Check(http.Scrobbles == repeatedStartBefore + 1,
+    "repeated start for the same play session preserves its identity");
+
 // Alternative mode uses user-data events, which share the retained fallback identity.
 lastfmUser.Options.AlternativeMode = true;
 var alt = Track();
@@ -116,7 +146,7 @@ Invoke(entry, "UserDataSaved", altArgs);
 clock.UtcNow += TimeSpan.FromMinutes(10);
 Invoke(entry, "UserDataSaved", altArgs);
 Check(http.Scrobbles == altBefore + 1, "alternative mode does not duplicate a PlaybackFinished event");
-Console.WriteLine("All 13 regression checks passed. No real HTTP requests were sent.");
+Console.WriteLine("All 17 regression checks passed. No real HTTP requests were sent.");
 
 public class DefaultsProxy : DispatchProxy
 {
