@@ -9,6 +9,14 @@
         "imageUrl": "https://www.last.fm/static/images/lastfm_logo_facebook.png",
         "versions": [
             {
+                "version": "10.11.0.14",
+                "changelog": "Prevent duplicate scrobbles when Jellyfin reports multiple stop events for the same playback, while still allowing intentionally repeated tracks to scrobble normally.",
+                "targetAbi": "10.11.9.0",
+                "sourceUrl": "https://github.com/danielfariati/jellyfin-plugin-lastfm/releases/download/10.11.0.14/lastfm_10.11.0.14.zip",
+                "checksum": "300bc47b28aab7b5606bf9cf248c7629",
+                "timestamp": "2026-11-05T00:48:47Z"
+            },
+            {
                 "version": "10.11.0.13",
                 "changelog": "Consider artist id when syncing favourites",
                 "targetAbi": "10.11.9.0",
