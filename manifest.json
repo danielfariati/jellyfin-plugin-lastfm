@@ -9,6 +9,14 @@
         "imageUrl": "https://www.last.fm/static/images/lastfm_logo_facebook.png",
         "versions": [
             {
+                "version": "10.11.0.15",
+                "changelog": "Improve configuration page reliability by preventing duplicate event handlers and reporting loading, authentication, and save failures instead of failing silently.",
+                "targetAbi": "10.11.9.0",
+                "sourceUrl": "https://github.com/danielfariati/jellyfin-plugin-lastfm/releases/download/10.11.0.15/lastfm_10.11.0.15.zip",
+                "checksum": "06a8a50d8dfb6d023f1c95d9e8a615a1",
+                "timestamp": "2026-11-05T01:10:51Z"
+            },
+            {
                 "version": "10.11.0.14",
                 "changelog": "Prevent duplicate scrobbles when Jellyfin reports multiple stop events for the same playback, while still allowing intentionally repeated tracks to scrobble normally.",
                 "targetAbi": "10.11.9.0",
