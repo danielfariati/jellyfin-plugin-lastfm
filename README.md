@@ -118,3 +118,33 @@ The plugin logs what it is doing, which usually explains a missing scrobble on i
 | `Scrobble failed ...` / `Scrobble exception: ...` | The request itself failed, including the error returned |
 
 Please also include your Jellyfin version, plugin version, and which client you were playing from, since a lot of scrobbling problems turn out to be client-specific.
+
+## 🧑‍💻 Local development
+
+Building and testing the plugin requires the .NET 10 SDK. Run all commands below from the repository root.
+
+### Building
+
+To create a release build in the same way as the GitHub workflow:
+
+```sh
+dotnet build Jellyfin.Plugin.Lastfm/Jellyfin.Plugin.Lastfm.csproj -c Release -o build
+```
+
+The plugin will be available at `build/Jellyfin.Plugin.Lastfm.dll`.
+
+### Running in Jellyfin
+
+The plugin cannot run by itself. To test a local build, stop Jellyfin, copy `Jellyfin.Plugin.Lastfm.dll` into a dedicated subfolder of Jellyfin's plugins directory, and start Jellyfin again. The location of the plugins directory depends on how Jellyfin was installed; see Jellyfin's [plugin documentation](https://jellyfin.org/docs/general/server/plugins/#manual) for the common locations.
+
+When debugging, build in the `Debug` configuration and copy the generated `.pdb` file alongside the plugin DLL.
+
+### Testing
+
+Run the xUnit test suite with:
+
+```sh
+dotnet test tests/Jellyfin.Plugin.Lastfm.Tests/Jellyfin.Plugin.Lastfm.Tests.csproj -c Release
+```
+
+The tests exercise the plugin's playback handlers and Last.fm API client with a fake HTTP handler, so they do not send requests to Last.fm. They also run automatically in the build and release workflows.
