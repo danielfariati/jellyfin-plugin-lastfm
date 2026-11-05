@@ -1,7 +1,7 @@
 ---
 name: "Last.fm"
 guid: "5e7fe7f0-b048-429e-a431-b1a7e69c930d"
-version: "10.11.0.15"
+version: "10.11.0.16"
 targetAbi: "10.11.9.0"
 framework: "net9.0"
 overview: "A plugin that scrobbles your Jellyfin music to Last.fm"
@@ -12,5 +12,5 @@ owner: "danielfariati"
 artifacts:
   - "Jellyfin.Plugin.Lastfm.dll"
 changelog: >
-  Improve configuration page reliability by preventing duplicate event handlers and reporting
-  loading, authentication, and save failures instead of failing silently.
+  Improve configuration page compatibility by loading its JavaScript through Jellyfin's external
+  controller mechanism instead of an inline script.
