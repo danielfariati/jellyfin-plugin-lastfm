@@ -60,7 +60,11 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '9.0.x'
+        dotnet-version: '10.0.x'
+
+    - name: Run tests
+      working-directory: tests/Jellyfin.Plugin.Lastfm.Tests
+      run: dotnet test -c Release
 
     - name: Build release via dotnet build
       run: dotnet build Jellyfin.Plugin.Lastfm -c Release -o ./build
