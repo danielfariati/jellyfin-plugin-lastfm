@@ -9,6 +9,14 @@
         "imageUrl": "https://www.last.fm/static/images/lastfm_logo_facebook.png",
         "versions": [
             {
+                "version": "10.11.0.16",
+                "changelog": "Improve configuration page compatibility by loading its JavaScript through Jellyfin's external controller mechanism instead of an inline script.",
+                "targetAbi": "10.11.9.0",
+                "sourceUrl": "https://github.com/danielfariati/jellyfin-plugin-lastfm/releases/download/10.11.0.16/lastfm_10.11.0.16.zip",
+                "checksum": "791d0bb758c4c233874b47234c5bd30f",
+                "timestamp": "2026-11-05T16:17:04Z"
+            },
+            {
                 "version": "10.11.0.15",
                 "changelog": "Improve configuration page reliability by preventing duplicate event handlers and reporting loading, authentication, and save failures instead of failing silently.",
                 "targetAbi": "10.11.9.0",
