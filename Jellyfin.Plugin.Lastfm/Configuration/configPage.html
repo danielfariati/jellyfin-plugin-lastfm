@@ -85,19 +85,33 @@
 
                     this.$el = $ctx;
 
-                    this.$el.find('#LastfmScrobblerConfigurationForm').on('submit', this, this.onSubmit);
-                    this.$el.find('#lastfmUser').on('change', this, $.proxy(this.onUserChange, this));
+                    this.$el.find('#LastfmScrobblerConfigurationForm')
+                        .off('submit.lastfm')
+                        .on('submit.lastfm', this, this.onSubmit);
+                    this.$el.find('#lastfmUser')
+                        .off('change.lastfm')
+                        .on('change.lastfm', this, $.proxy(this.onUserChange, this));
 
                     var loadConfig = this.loadConfiguration();
                     var loadUsers = this.loadUsers().then($.proxy(this.buildUserList, this));
 
                     // When we load everything, set the current user
                     $.when(loadConfig, loadUsers).then($.proxy(function () {
-                        Dashboard.hideLoadingMsg();
-
                         // Populate the inputs with the default selected user
                         this.onUserChange();
+
+                        Dashboard.hideLoadingMsg();
+                    }, this)).then(null, $.proxy(function (error) {
+                        this.handleError('Unable to load the Last.fm configuration or Jellyfin user list.', error);
                     }, this));
+                },
+
+                handleError: function (message, error) {
+                    Dashboard.hideLoadingMsg();
+                    console.error(message, error);
+
+                    var detail = error && (error.message || error.statusText);
+                    Dashboard.alert(detail ? message + ' ' + detail : message + ' Check the browser console for details.');
                 },
 
                 loadConfiguration: function () {
@@ -145,8 +159,7 @@
                     this._config.LastfmApiHost = newApiHost;
 
                     if (!username && !password) {
-                        this.doSave();
-                        return;
+                        return this.doSave();
                     }
 
                     // If the config for the user doesn't exist, create one
@@ -159,18 +172,13 @@
                     // Attach current option settings to
                     userConfig.Options = this.getUIOptionsValues();
 
-                    Dashboard.showLoadingMsg();
-
-
                     // Dont try and login again if the password field is still the SessionKey
                     if (userConfig.SessionKey == password && !apiHostChanged) {
-                        this.doSave();
-
-                        return;
+                        return this.doSave();
                     }
 
                     // Get session with user data
-                    ApiClient.LastfmGetMobileSession(username, password, this._config.LastfmApiHost).then($.proxy(function (data) {
+                    return ApiClient.LastfmGetMobileSession(username, password, this._config.LastfmApiHost).then($.proxy(function (data) {
                         // Check if we have data
                         if (data && data.session) {
 
@@ -178,15 +186,16 @@
                             userConfig.SessionKey = data.session.key;
 
                             // Save
-                            this.doSave();
-
-                            return;
+                            return this.doSave();
                         }
 
-                        Dashboard.alert(data.message || "Something went wrong");
-                        console.log(data.message);
+                        var error = new Error(data && data.message ? data.message : 'Last.fm did not return a session.');
+                        this.handleError('Unable to authenticate with Last.fm.', error);
+                        return null;
+                    }, this), $.proxy(function (error) {
+                        this.handleError('Unable to authenticate with Last.fm.', error);
+                        return null;
                     }, this));
-                    Dashboard.hideLoadingMsg();
                 },
 
                 doSave: function () {
@@ -246,17 +255,23 @@
                     var username = $(this).find("#lastfmUsername").val();
                     var password = $(this).find("#lastfmPassword").val();
 
+                    Dashboard.showLoadingMsg();
+
                     // Load the config again in case another user has updated their Lastfm info
                     self.loadConfiguration().then(function () {
-                        self.save(username, password);
+                        return self.save(username, password);
+                    }).then(null, function (error) {
+                        self.handleError('Unable to save the Last.fm configuration.', error);
                     });
+
+                    return false;
                 },
 
             };
 
             // Bind to the page this script was injected with, not the first match in the document - an earlier copy of this page may still be cached in the DOM.
             var lastfmPages = document.querySelectorAll('#LastfmScrobblerConfigurationPage');
-            $(lastfmPages[lastfmPages.length - 1]).on('pageshow', function () {
+            $(lastfmPages[lastfmPages.length - 1]).off('pageshow.lastfm').on('pageshow.lastfm', function () {
                 LastfmScrobblerConfigurationPage.init($(this));
             });
 
